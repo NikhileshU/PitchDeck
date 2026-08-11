@@ -47,7 +47,8 @@ body {
   padding: var(--space-card-pad);
   background: var(--color-bg);
   position: relative;
-  overflow: hidden; /* validation guarantees no overflow before render */
+  /* no overflow:hidden — the schema forbids clipping. Overflow must fail loudly
+     (validate.py emits a Tier-1 error); a clipped card is a silent failure. */
   display: flex;
   flex-direction: column;
 }

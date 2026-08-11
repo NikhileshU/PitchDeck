@@ -30,24 +30,31 @@ def find_browser(override=None):
         if Path(override).exists():
             return override
         raise FileNotFoundError(f"--browser not found: {override}")
+    import os
     for c in CANDIDATES:
-        if Path(c).exists():
+        if os.access(c, os.X_OK):
             return c
     return None
 
 
-def export(html_path, out_path, browser):
+def export(html_path, out_path, browser, no_sandbox=False):
     html_uri = Path(html_path).resolve().as_uri()
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
+    out.unlink(missing_ok=True)  # a stale PDF must never pass as this run's output
     cmd = [
         browser,
         "--headless",
         "--disable-gpu",
         "--no-pdf-header-footer",
+        # let images and webfonts settle before printing
+        "--run-all-compositor-stages-before-draw",
+        "--virtual-time-budget=10000",
         f"--print-to-pdf={out.resolve()}",
         html_uri,
     ]
+    if no_sandbox:
+        cmd.insert(1, "--no-sandbox")
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     if not out.exists() or out.stat().st_size == 0:
         raise RuntimeError(
@@ -55,6 +62,9 @@ def export(html_path, out_path, browser):
     with open(out, "rb") as f:
         if f.read(5) != b"%PDF-":
             raise RuntimeError(f"{out} is not a PDF")
+    if proc.returncode != 0:
+        print(f"export_pdf: warning: browser exited {proc.returncode} after writing "
+              f"the PDF:\n{proc.stderr[-1000:]}", file=sys.stderr)
 
 
 def main(argv=None):
@@ -63,6 +73,8 @@ def main(argv=None):
     ap.add_argument("--out", required=True)
     ap.add_argument("--browser", default=None,
                     help="path to a Chromium-family binary (autodetected if omitted)")
+    ap.add_argument("--no-sandbox", action="store_true",
+                    help="pass --no-sandbox to the browser (container runtimes)")
     args = ap.parse_args(argv)
 
     if not Path(args.html).exists():
@@ -77,7 +89,7 @@ def main(argv=None):
         return 1
 
     try:
-        export(args.html, args.out, browser)
+        export(args.html, args.out, browser, no_sandbox=args.no_sandbox)
     except (RuntimeError, FileNotFoundError, subprocess.TimeoutExpired) as e:
         print(f"export_pdf: {e}", file=sys.stderr)
         return 1

@@ -1,0 +1,274 @@
+/*
+ * base.css — layout only. Zero hex literals, zero id selectors.
+ *
+ * Every colour, size, and spacing value is a custom property. render_html.py
+ * emits the following variables on :root, converting every dimensional theme
+ * value from pt to CSS px (x 4/3):
+ *
+ *   --color-bg --color-surface --color-text --color-muted --color-accent
+ *   --color-series-1 ... --color-series-5
+ *   --color-tone-info --color-tone-warn --color-tone-good
+ *   --type-family --type-family-mono
+ *   --type-title --type-card-title --type-body --type-caption   (px)
+ *   --type-line-height                                          (unitless)
+ *   --space-card-pad --space-block-gap --space-radius           (px)
+ *   --card-w --card-h              spec constants: 960pt, 540pt -> 1280px, 720px
+ *   --stroke-hairline              1pt   -> 1.333px  (table rules, divider)
+ *   --stroke-accent                4.5pt -> 6px      (accent rule, callout bar)
+ *
+ * The page-size rule for PDF export (at-page) is emitted by the renderer, not
+ * defined here, because at-page cannot read custom properties.
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--color-bg);
+  font-family: var(--type-family);
+  line-height: var(--type-line-height);
+  color: var(--color-text);
+}
+
+/* ---- card frame ---------------------------------------------------- */
+
+.deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card {
+  width: var(--card-w);
+  height: var(--card-h);
+  padding: var(--space-card-pad);
+  background: var(--color-bg);
+  position: relative;
+  overflow: hidden; /* validation guarantees no overflow before render */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- layouts (exactly 4) ------------------------------------------- */
+
+.card--title {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.card--title .card-title {
+  font-size: var(--type-title);
+}
+
+.card--title::after {
+  content: "";
+  width: calc(var(--space-card-pad) * 2);
+  height: var(--stroke-accent);
+  background: var(--color-accent);
+  margin-top: var(--space-block-gap);
+}
+
+.card--section {
+  background: var(--color-surface);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.card--section .card-title {
+  font-size: var(--type-title);
+}
+
+.card--content .card-title {
+  font-size: var(--type-card-title);
+  margin-bottom: var(--space-block-gap);
+}
+
+.card--content .card-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-block-gap);
+  flex: 1;
+  min-height: 0;
+}
+
+.card--hero {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.card--hero .card-title {
+  font-size: var(--type-title);
+}
+
+.card--hero .b-kpi .b-kpi-value {
+  font-size: calc(var(--type-title) * 2);
+}
+
+.card--hero .b-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.card-subtitle {
+  font-size: var(--type-body);
+  color: var(--color-muted);
+  margin-top: var(--space-block-gap);
+}
+
+/* ---- blocks (exactly 10) ------------------------------------------- */
+
+.b-text {
+  font-size: var(--type-body);
+}
+
+.b-text--emphasis {
+  font-weight: 600;
+}
+
+.b-bullets {
+  font-size: var(--type-body);
+  list-style-position: outside;
+  padding-left: calc(var(--space-block-gap) * 1.5);
+}
+
+.b-bullets li + li {
+  margin-top: calc(var(--space-block-gap) / 2);
+}
+
+.b-kpi {
+  display: flex;
+  flex-direction: column;
+}
+
+.b-kpi-value {
+  font-size: var(--type-title);
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.b-kpi-label {
+  font-size: var(--type-body);
+}
+
+.b-kpi-delta {
+  font-size: var(--type-caption);
+  color: var(--color-muted);
+}
+
+.b-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.b-chart figcaption {
+  font-size: var(--type-caption);
+  color: var(--color-muted);
+  margin-top: calc(var(--space-block-gap) / 2);
+}
+
+.b-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-body);
+}
+
+.b-table th {
+  text-align: left;
+  font-size: var(--type-caption);
+  color: var(--color-muted);
+  border-bottom: var(--stroke-hairline) solid var(--color-muted);
+}
+
+.b-table th,
+.b-table td {
+  padding: calc(var(--space-block-gap) / 3) calc(var(--space-block-gap) / 2);
+}
+
+.b-table td {
+  border-bottom: var(--stroke-hairline) solid var(--color-surface);
+}
+
+.b-callout {
+  font-size: var(--type-body);
+  background: var(--color-surface);
+  border-radius: var(--space-radius);
+  padding: calc(var(--space-block-gap) / 1.5) var(--space-block-gap);
+}
+
+.b-callout--info {
+  border-left: var(--stroke-accent) solid var(--color-tone-info);
+}
+
+.b-callout--warn {
+  border-left: var(--stroke-accent) solid var(--color-tone-warn);
+}
+
+.b-callout--good {
+  border-left: var(--stroke-accent) solid var(--color-tone-good);
+}
+
+.b-quote {
+  font-size: var(--type-body);
+  font-style: italic;
+  border-left: var(--stroke-accent) solid var(--color-accent);
+  padding-left: var(--space-block-gap);
+}
+
+.b-quote cite {
+  display: block;
+  font-size: var(--type-caption);
+  font-style: normal;
+  color: var(--color-muted);
+  margin-top: calc(var(--space-block-gap) / 2);
+}
+
+.b-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.b-image--cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.b-image--contain {
+  object-fit: contain;
+}
+
+.b-columns {
+  display: grid;
+  gap: var(--space-block-gap);
+  align-items: start;
+}
+
+.b-columns--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.b-columns--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.b-columns .b-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-block-gap);
+  min-width: 0;
+}
+
+.b-divider {
+  border: 0;
+  border-top: var(--stroke-hairline) solid var(--color-muted);
+}

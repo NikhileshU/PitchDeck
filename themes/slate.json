@@ -1,0 +1,28 @@
+{
+  "name": "slate",
+  "color": {
+    "bg":      "#0F1419",
+    "surface": "#1A2027",
+    "text":    "#E8EAED",
+    "muted":   "#9AA4AF",
+    "accent":  "#4F9CF9",
+    "series":  ["#4F9CF9", "#7C5CFF", "#2DD4A7", "#F2B13C", "#F27A7A"],
+    "tone":    { "info": "#4F9CF9", "warn": "#F2B13C", "good": "#2DD4A7" }
+  },
+  "type": {
+    "family":   "Inter, system-ui, sans-serif",
+    "familyMono": "ui-monospace, monospace",
+    "scale": {
+      "title":     40,
+      "cardTitle": 28,
+      "body":      18,
+      "caption":   12
+    },
+    "lineHeight": 1.35
+  },
+  "space": {
+    "cardPad":  42,
+    "blockGap": 18,
+    "radius":    9
+  }
+}

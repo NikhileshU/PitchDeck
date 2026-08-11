@@ -1,0 +1,36 @@
+{
+  "schema": "1.0",
+  "meta": { "title": "Expansion Case", "archetype": "business-stakeholder",
+            "theme": "slate", "aspect": "16:9" },
+  "cards": [
+    { "id": "c1", "layout": "title", "title": "Expansion Case",
+      "subtitle": "Growth · August 2026", "role": null, "blocks": [], "notes": null },
+    { "id": "c2", "layout": "content",
+      "title": "Pilot conversion justifies the expansion ask",
+      "role": "recommendation",
+      "blocks": [
+        { "id": "c2b1", "type": "chart", "chart": "bar",
+          "caption": "Pilot-to-paid conversion by segment (%)",
+          "data": { "categories": ["Enterprise", "Mid-market", "SMB"],
+                    "series": [ { "name": "Conversion", "values": [86, 71, 54] } ] } }
+      ],
+      "notes": "Chart has no source field — where do these numbers come from?" },
+    { "id": "c3", "layout": "content", "title": "CAC fell 22% quarter over quarter",
+      "role": null,
+      "blocks": [
+        { "id": "c3b1", "type": "kpi", "value": "$4,100", "label": "blended CAC, Q3",
+          "delta": "−22% vs Q2" }
+      ],
+      "notes": "KPI has no source field either." },
+    { "id": "c4", "layout": "content",
+      "title": "Churn stays under 2% among converted pilots",
+      "role": null,
+      "blocks": [
+        { "id": "c4b1", "type": "table", "source": "placeholder",
+          "headers": ["Cohort", "Logos", "Churn"],
+          "rows": [ ["Q1 pilots", "34", "1.8%"],
+                    ["Q2 pilots", "41", "1.2%"] ] }
+      ],
+      "notes": "Labelled placeholder — legitimate, but must surface as unverified." }
+  ]
+}

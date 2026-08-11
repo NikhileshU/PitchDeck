@@ -1,0 +1,34 @@
+{
+  "schema": "1.0",
+  "meta": { "title": "Q3 Business Review", "archetype": "business-stakeholder",
+            "theme": "slate", "aspect": "16:9" },
+  "cards": [
+    { "id": "c1", "layout": "title", "title": "Q3 Business Review",
+      "subtitle": "Commercial Ops · August 2026", "role": null, "blocks": [], "notes": null },
+    { "id": "c2", "layout": "content", "title": "Q3 Revenue Overview",
+      "role": "recommendation",
+      "blocks": [
+        { "id": "c2b1", "type": "kpi", "value": "$11.6M", "label": "Q3 net revenue",
+          "delta": "−14% vs plan", "source": "user" }
+      ],
+      "notes": "Revenue summary." },
+    { "id": "c3", "layout": "content", "title": "Supply Chain Update",
+      "role": null,
+      "blocks": [
+        { "id": "c3b1", "type": "table", "source": "user",
+          "headers": ["Supplier", "Committed", "Delivered"],
+          "rows": [ ["Hanwei", "120K", "84K"],
+                    ["Sunmoto", "90K", "71K"] ] }
+      ],
+      "notes": "Supplier status." },
+    { "id": "c4", "layout": "content", "title": "Next Steps",
+      "role": null,
+      "blocks": [
+        { "id": "c4b1", "type": "bullets", "items": [
+            "Qualify a second APAC source",
+            "Re-baseline the Q4 forecast",
+            "Weekly supply war-room until December" ] }
+      ],
+      "notes": "Actions." }
+  ]
+}

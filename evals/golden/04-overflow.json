@@ -1,0 +1,37 @@
+{
+  "schema": "1.0",
+  "meta": { "title": "Q3 Everything Review", "archetype": "business-stakeholder",
+            "theme": "slate", "aspect": "16:9" },
+  "cards": [
+    { "id": "c1", "layout": "title", "title": "Q3 Everything Review",
+      "subtitle": "Commercial Ops · August 2026", "role": null, "blocks": [], "notes": null },
+    { "id": "c2", "layout": "content",
+      "title": "One card holds a full quarter of evidence",
+      "role": "recommendation",
+      "blocks": [
+        { "id": "c2b1", "type": "chart", "chart": "bar", "source": "user",
+          "caption": "Q3 revenue by region, plan vs actual (US$M)",
+          "data": { "categories": ["APAC", "EMEA", "Americas"],
+                    "series": [ { "name": "Plan", "values": [4.0, 3.2, 5.1] },
+                                { "name": "Actual", "values": [3.4, 3.3, 4.9] } ] } },
+        { "id": "c2b2", "type": "table", "source": "user",
+          "headers": ["Supplier", "Committed", "Delivered", "Gap", "Recovery ETA"],
+          "rows": [ ["Hanwei", "120K", "84K", "−30%", "December"],
+                    ["Sunmoto", "90K", "71K", "−21%", "December"],
+                    ["Delta-P", "60K", "61K", "+2%", "n/a"],
+                    ["Kyorin", "45K", "38K", "−16%", "November"],
+                    ["Westbay", "30K", "24K", "−20%", "January"],
+                    ["Nordic-F", "25K", "25K", "0%", "n/a"] ] },
+        { "id": "c2b3", "type": "callout", "tone": "warn",
+          "text": "Every miss traces to the same upstream chip allocation shortfall." },
+        { "id": "c2b4", "type": "text",
+          "text": "Dual-sourcing closes the gap by January and pays back within two quarters." }
+      ],
+      "notes": "This card must be split — chart, six-row table, callout and text cannot fit." },
+    { "id": "c3", "layout": "content", "title": "The fix pays back within two quarters",
+      "role": null,
+      "blocks": [ { "id": "c3b1", "type": "kpi", "value": "2.1x",
+                    "label": "12-month return on the $1.2M", "source": "derived" } ],
+      "notes": "Payback." }
+  ]
+}

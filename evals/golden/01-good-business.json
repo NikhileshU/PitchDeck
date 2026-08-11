@@ -1,0 +1,79 @@
+{
+  "schema": "1.0",
+  "meta": { "title": "Q3 Launch Review", "archetype": "business-stakeholder",
+            "theme": "slate", "aspect": "16:9" },
+  "cards": [
+    { "id": "c1", "layout": "title", "title": "Q3 Launch Review",
+      "subtitle": "Commercial Ops · August 2026", "role": null, "blocks": [], "notes": null },
+    { "id": "c2", "layout": "content",
+      "title": "Approve $1.2M to dual-source APAC supply now", "role": "recommendation",
+      "blocks": [
+        { "id": "c2b1", "type": "kpi", "value": "$1.2M",
+          "label": "one-time dual-sourcing investment", "delta": "payback in 2 quarters",
+          "source": "derived" },
+        { "id": "c2b2", "type": "callout", "tone": "info",
+          "text": "Decision needed by Aug 29 to lock Q1 capacity." }
+      ],
+      "notes": "Lead with the ask. Payback math is on c7 if challenged." },
+    { "id": "c3", "layout": "content", "title": "Q3 revenue fell 14% below plan",
+      "role": "problem",
+      "blocks": [
+        { "id": "c3b1", "type": "chart", "chart": "bar", "source": "user",
+          "caption": "Q3 revenue by region, plan vs actual (US$M)",
+          "data": { "categories": ["APAC", "EMEA", "Americas"],
+                    "series": [ { "name": "Plan", "values": [4.0, 3.2, 5.1] },
+                                { "name": "Actual", "values": [3.4, 3.3, 4.9] } ] } },
+        { "id": "c3b2", "type": "callout", "tone": "warn",
+          "text": "The entire miss is APAC; EMEA and Americas landed on plan." }
+      ],
+      "notes": "Do not let this become a forecasting debate — the miss is supply, not demand." },
+    { "id": "c4", "layout": "content",
+      "title": "Two of three APAC suppliers missed committed volumes",
+      "role": null,
+      "blocks": [
+        { "id": "c4b1", "type": "table", "source": "user",
+          "headers": ["Supplier", "Committed", "Delivered", "Gap"],
+          "rows": [ ["Hanwei", "120K", "84K", "−30%"],
+                    ["Sunmoto", "90K", "71K", "−21%"],
+                    ["Delta-P", "60K", "61K", "+2%"] ] },
+        { "id": "c4b2", "type": "text",
+          "text": "Both misses trace to the same upstream chip allocation; neither expects recovery before December." }
+      ],
+      "notes": "Delta-P is the template for the second source — small but reliable." },
+    { "id": "c5", "layout": "section", "title": "The fix", "subtitle": null,
+      "role": null, "blocks": [], "notes": null },
+    { "id": "c6", "layout": "content",
+      "title": "Dual-sourcing closes the volume gap by January",
+      "role": "solution",
+      "blocks": [
+        { "id": "c6b1", "type": "chart", "chart": "line", "source": "derived",
+          "caption": "Projected monthly unit supply vs demand (K units)",
+          "data": { "categories": ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb"],
+                    "series": [ { "name": "Supply", "values": [78, 84, 95, 110, 128, 131] },
+                                { "name": "Demand", "values": [102, 106, 112, 118, 124, 128] } ] } }
+      ],
+      "notes": "Crossover lands mid-January; walk through the two assumptions in the appendix if asked." },
+    { "id": "c7", "layout": "content", "title": "The ask pays back within two quarters",
+      "role": null,
+      "blocks": [
+        { "id": "c7b1", "type": "kpi", "value": "2.1x",
+          "label": "12-month return on the $1.2M", "delta": "breakeven in Q1",
+          "source": "derived" },
+        { "id": "c7b2", "type": "bullets", "items": [
+            "$0.9M qualifies Delta-P for the two constrained SKUs",
+            "$0.3M covers tooling and a 6-week parallel run",
+            "Recovered revenue clears $2.5M across Q4–Q1" ] }
+      ],
+      "notes": "The recovered-revenue line is the conservative case." },
+    { "id": "c8", "layout": "content",
+      "title": "We need sign-off before the August 29 vendor deadline",
+      "role": "ask",
+      "blocks": [
+        { "id": "c8b1", "type": "callout", "tone": "info",
+          "text": "Hanwei's capacity window closes Aug 29; after that, recovery slips a full quarter." },
+        { "id": "c8b2", "type": "text",
+          "text": "Approval today keeps January crossover on the table. A two-week slip moves it to March." }
+      ],
+      "notes": "Close by restating the single decision on the table." }
+  ]
+}

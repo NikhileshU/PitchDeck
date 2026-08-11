@@ -104,6 +104,7 @@ body {
 
 .card--hero .card-title {
   font-size: var(--type-title);
+  position: relative; /* sits above a full-bleed hero image */
 }
 
 .card--hero .b-kpi .b-kpi-value {
@@ -271,4 +272,12 @@ body {
 .b-divider {
   border: 0;
   border-top: var(--stroke-hairline) solid var(--color-muted);
+}
+
+/* ---- print / PDF ---------------------------------------------------- */
+
+@media print {
+  .card {
+    break-after: page;
+  }
 }

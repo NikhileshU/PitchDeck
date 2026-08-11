@@ -1,0 +1,180 @@
+{
+  "schema": "1.0",
+  "meta": {
+    "title": "Render Fixture — All Blocks",
+    "archetype": "business-stakeholder",
+    "theme": "slate",
+    "aspect": "16:9"
+  },
+  "cards": [
+    {
+      "id": "c1",
+      "layout": "title",
+      "title": "Render Fixture — All Blocks",
+      "subtitle": "deck-builder · phase 3",
+      "role": null,
+      "blocks": [],
+      "notes": null
+    },
+    {
+      "id": "c2",
+      "layout": "section",
+      "title": "Every block, every layout",
+      "subtitle": null,
+      "role": null,
+      "blocks": [],
+      "notes": null
+    },
+    {
+      "id": "c3",
+      "layout": "content",
+      "title": "Text and bullets carry the argument",
+      "role": null,
+      "blocks": [
+        { "id": "c3b1", "type": "text", "emphasis": true,
+          "text": "Emphasised lead-in text sets the claim in one sentence." },
+        { "id": "c3b2", "type": "divider" },
+        { "id": "c3b3", "type": "bullets", "items": [
+          "First supporting point, short and scannable",
+          "Second point with a figure: 42% of pilots converted",
+          "Third point stays under ninety characters",
+          "Fourth point closes the argument"
+        ] }
+      ],
+      "notes": "Speaker note for c3."
+    },
+    {
+      "id": "c4",
+      "layout": "content",
+      "title": "Q3 revenue fell 14% on APAC supply misses",
+      "role": null,
+      "blocks": [
+        { "id": "c4b1", "type": "chart", "chart": "bar", "source": "user",
+          "caption": "Revenue by region, Q1–Q3 (US$M)",
+          "data": {
+            "categories": ["Q1", "Q2", "Q3"],
+            "series": [
+              { "name": "APAC", "values": [4.2, 4.0, 3.4] },
+              { "name": "EMEA", "values": [3.1, 3.3, 3.5] }
+            ]
+          } },
+        { "id": "c4b2", "type": "callout", "tone": "warn",
+          "text": "Two of three APAC suppliers missed committed volumes." }
+      ],
+      "notes": "Speaker note for c4."
+    },
+    {
+      "id": "c5",
+      "layout": "content",
+      "title": "Unit economics hold above target",
+      "role": null,
+      "blocks": [
+        { "id": "c5b1", "type": "kpi", "value": "$3.4M", "label": "Q3 net revenue",
+          "delta": "−14% vs Q2", "source": "user" },
+        { "id": "c5b2", "type": "table", "source": "derived",
+          "headers": ["Metric", "Target", "Actual"],
+          "rows": [
+            ["Gross margin", "62%", "64%"],
+            ["CAC payback", "14 mo", "12 mo"],
+            ["Net retention", "105%", "109%"]
+          ] }
+      ],
+      "notes": "Speaker note for c5."
+    },
+    {
+      "id": "c6",
+      "layout": "content",
+      "title": "Two options split on cost and speed",
+      "role": null,
+      "blocks": [
+        { "id": "c6b1", "type": "columns", "children": [
+          [
+            { "id": "c6b2", "type": "text",
+              "text": "Option A ships in Q4 at higher unit cost; capacity is contractually guaranteed." },
+            { "id": "c6b3", "type": "callout", "tone": "info",
+              "text": "Legal review of the capacity guarantee closes Friday." }
+          ],
+          [
+            { "id": "c6b4", "type": "quote",
+              "text": "We can absorb the premium for one quarter, not four.",
+              "attribution": "VP Finance, planning review" },
+            { "id": "c6b5", "type": "image",
+              "src": "assets/placeholder.png",
+              "alt": "Placeholder supply-chain diagram", "fit": "contain" }
+          ]
+        ] }
+      ],
+      "notes": "Speaker note for c6."
+    },
+    {
+      "id": "c7",
+      "layout": "content",
+      "title": "Retention trends upward across both cohorts",
+      "role": null,
+      "blocks": [
+        { "id": "c7b1", "type": "chart", "chart": "line", "source": "derived",
+          "caption": "Logo retention by cohort (%)",
+          "data": {
+            "categories": ["Mar", "Apr", "May", "Jun", "Jul", "Aug"],
+            "series": [
+              { "name": "Enterprise", "values": [91, 92, 92, 94, 95, 96] },
+              { "name": "Mid-market", "values": [84, 83, 85, 86, 88, 89] }
+            ]
+          } }
+      ],
+      "notes": "Speaker note for c7."
+    },
+    {
+      "id": "c8",
+      "layout": "content",
+      "title": "EMEA leads on pipeline conversion",
+      "role": null,
+      "blocks": [
+        { "id": "c8b1", "type": "chart", "chart": "hbar", "source": "user",
+          "caption": "Pipeline-to-close conversion by region (%)",
+          "data": {
+            "categories": ["EMEA", "Americas", "APAC", "LatAm"],
+            "series": [ { "name": "Conversion", "values": [34, 29, 22, 18] } ]
+          } }
+      ],
+      "notes": "Speaker note for c8."
+    },
+    {
+      "id": "c9",
+      "layout": "content",
+      "title": "Cloud spend concentrates in two vendors",
+      "role": null,
+      "blocks": [
+        { "id": "c9b1", "type": "chart", "chart": "pie", "source": "placeholder",
+          "caption": "FY25 cloud spend by vendor (US$K)",
+          "data": {
+            "categories": ["AWS", "GCP", "Azure", "Other"],
+            "series": [ { "name": "Spend", "values": [420, 310, 140, 60] } ]
+          } }
+      ],
+      "notes": "Speaker note for c9."
+    },
+    {
+      "id": "c10",
+      "layout": "hero",
+      "title": "of pilot customers convert to paid",
+      "role": null,
+      "blocks": [
+        { "id": "c10b1", "type": "kpi", "value": "86%", "label": "pilot-to-paid conversion",
+          "delta": "+9pp year over year", "source": "user" }
+      ],
+      "notes": null
+    },
+    {
+      "id": "c11",
+      "layout": "hero",
+      "title": "Appendix — supply chain detail follows",
+      "role": "appendix",
+      "blocks": [
+        { "id": "c11b1", "type": "image", "src": "assets/placeholder.png",
+          "alt": "Full-bleed placeholder image", "fit": "cover" }
+      ],
+      "notes": null
+    }
+  ]
+}

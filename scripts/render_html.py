@@ -2,35 +2,32 @@
 """render_html.py — render the deck.json IR to one self-contained HTML file.
 
 Pure renderer: render(ir, theme, out_path, css="") -> None. No globals/env/network.
-Charts are inline SVG, no JavaScript; the CLI embeds images as base64 data URIs.
-Every pt dimension x 4/3 -> CSS px (960x540pt -> 1280x720px). Negative values are
-supported on bar/hbar/line; pie requires exactly one non-negative series.
+Inline-SVG charts, no JavaScript; CLI embeds images as data URIs. pt x 4/3 -> px.
 """
 
 import argparse, base64, html, json, math, mimetypes, sys
 from pathlib import Path
 
-def _px(pt):
-    return round(pt * 4 / 3, 2)
+def _px(pt): return round(pt * 4 / 3, 2)
 
-def _e(s):
-    return html.escape(str(s), quote=True)
+def _e(s): return html.escape(str(s), quote=True)
 
-def _fmt(v):
-    if isinstance(v, float) and v.is_integer():
-        v = int(v)
-    return f"{v:g}" if isinstance(v, float) else str(v)
+def _fmt(v): return f"{v:g}" if isinstance(v, (int, float)) else str(v)
 
-def _ser(j, ncolors):
-    return f"var(--color-series-{j % ncolors + 1})"
+def _ser(j, ncolors): return f"var(--color-series-{j % ncolors + 1})"
 
-def _trunc(s, maxch):
-    s = str(s)
-    return s if len(s) <= maxch else s[: max(1, maxch - 1)] + "…"
+def _trunc(s, maxch): return s if len(s := str(s)) <= maxch else s[: max(1, maxch - 1)] + "…"
 
-def _cssv(v):
-    s = str(v)
-    if "<" in s or "{" in s or "}" in s:  # keep theme values inside the style block
+def _css_color(v):
+    # allowlist: #RRGGBB only (shared contract with validate.py and render_pptx.py)
+    s = str(v).strip()
+    if len(s) == 7 and s[0] == "#" and all(c in "0123456789abcdefABCDEF" for c in s[1:]):
+        return s
+    raise ValueError(f"theme colours must be #RRGGBB hex, got {s!r}")
+
+def _css_text(v):
+    s = str(v).strip()
+    if any(c in "<>{}();:/\\" for c in s):
         raise ValueError(f"unsafe character in theme value: {s!r}")
     return s
 
@@ -39,21 +36,17 @@ def _cssv(v):
 def _css_vars(theme):
     c, t, s = theme["color"], theme["type"], theme["space"]
     sc = t["scale"]
-    v = [
-        f"--color-bg: {_cssv(c['bg'])}", f"--color-surface: {_cssv(c['surface'])}",
-        f"--color-text: {_cssv(c['text'])}", f"--color-muted: {_cssv(c['muted'])}",
-        f"--color-accent: {_cssv(c['accent'])}",
-    ]
-    v += [f"--color-series-{i}: {_cssv(col)}" for i, col in enumerate(c["series"], 1)]
-    v += [f"--color-tone-{k}: {_cssv(col)}" for k, col in c["tone"].items()]
+    v = [f"--color-{k}: {_css_color(c[k])}" for k in ("bg", "surface", "text", "muted", "accent")]
+    v += [f"--color-series-{i}: {_css_color(col)}" for i, col in enumerate(c["series"], 1)]
+    v += [f"--color-tone-{k}: {_css_color(col)}" for k, col in c["tone"].items()]
     v += [
-        f"--type-family: {_cssv(t['family'])}",
-        f"--type-family-mono: {_cssv(t['familyMono'])}",
+        f"--type-family: {_css_text(t['family'])}",
+        f"--type-family-mono: {_css_text(t['familyMono'])}",
         f"--type-title: {_px(sc['title'])}px",
         f"--type-card-title: {_px(sc['cardTitle'])}px",
         f"--type-body: {_px(sc['body'])}px",
         f"--type-caption: {_px(sc['caption'])}px",
-        f"--type-line-height: {_cssv(t['lineHeight'])}",
+        f"--type-line-height: {_css_text(t['lineHeight'])}",
         f"--space-card-pad: {_px(s['cardPad'])}px",
         f"--space-block-gap: {_px(s['blockGap'])}px",
         f"--space-radius: {_px(s['radius'])}px",
@@ -64,15 +57,20 @@ def _css_vars(theme):
 
 # ---- charts: inline SVG ----------------------------------------------------
 
-def _legend(series, fs, nc):
-    x, sw, parts = 0.0, fs * 0.75, []
+def _legend(series, fs, nc, W):
+    x, y, sw, parts = 0.0, 0.0, fs * 0.75, []
     for j, s in enumerate(series):
         name = _trunc(s["name"], 18)
-        parts.append(f'<rect x="{x:.1f}" y="{fs * 0.3:.1f}" width="{sw:.1f}" '
+        w_item = sw + fs * 0.45 + len(name) * fs * 0.62 + fs * 1.4
+        if x > 0 and x + w_item > W:  # wrap; cap at two rows
+            x, y = 0.0, y + fs * 1.4
+            if y > fs * 1.5:
+                break
+        parts.append(f'<rect x="{x:.1f}" y="{y + fs * 0.3:.1f}" width="{sw:.1f}" '
                      f'height="{sw:.1f}" rx="2" fill="{_ser(j, nc)}"/>')
-        tx = x + sw + fs * 0.45
-        parts.append(f'<text x="{tx:.1f}" y="{fs:.1f}" fill="var(--color-muted)">{_e(name)}</text>')
-        x = tx + len(name) * fs * 0.62 + fs * 1.4
+        parts.append(f'<text x="{x + sw + fs * 0.45:.1f}" y="{y + fs:.1f}" '
+                     f'fill="var(--color-muted)">{_e(name)}</text>')
+        x += w_item
     return "".join(parts)
 
 def _axis(x1, y1, x2, y2):
@@ -110,7 +108,7 @@ def _chart_bar(cats, series, W, H, fs, nc):
     y0, gw, gap = Y(0), W / n, 2.0
     bw = min((gw * 0.62 - gap * (m - 1)) / m, fs * 3.2)
     label_all = m * n <= 8
-    out = [_legend(series, fs, nc)] if m > 1 else []
+    out = [_legend(series, fs, nc, W)] if m > 1 else []
     for i, cat in enumerate(cats):
         x0 = i * gw + (gw - (bw * m + gap * (m - 1))) / 2
         out.append(f'<text x="{i * gw + gw / 2:.1f}" y="{H - fs * 0.35:.1f}" '
@@ -144,7 +142,7 @@ def _chart_hbar(cats, series, W, H, fs, nc):
     bh = min((rh * 0.62 - 2 * (m - 1)) / m, fs * 1.5)
     label_all = m * n <= 12
     maxch = max(2, int(lw / (fs * 0.62)) - 1)
-    out = [_legend(series, fs, nc)] if m > 1 else []
+    out = [_legend(series, fs, nc, W)] if m > 1 else []
     for i, cat in enumerate(cats):
         yc = top + i * rh + rh / 2
         y0 = yc - (bh * m + 2 * (m - 1)) / 2
@@ -184,7 +182,7 @@ def _chart_line(cats, series, W, H, fs, nc):
     def Y(v):
         return base - ph * (float(v) - lo) / (hi - lo)
 
-    out = [_legend(series, fs, nc)] if m > 1 else []
+    out = [_legend(series, fs, nc, W)] if m > 1 else []
     out.append(_axis(left, base, left + pw, base))
     step = max(1, math.ceil(n / 8))
     for i in range(0, n, step):
@@ -300,8 +298,7 @@ def _b_columns(b, theme):
                    for col in b["children"])
     return f'<div class="b-columns b-columns--{len(b["children"])}">{cols}</div>'
 
-def _b_divider(b, theme):
-    return '<hr class="b-divider">'
+def _b_divider(b, theme): return '<hr class="b-divider">'
 
 _BLOCKS = {"text": _b_text, "bullets": _b_bullets, "kpi": _b_kpi, "chart": _b_chart,
            "table": _b_table, "callout": _b_callout, "quote": _b_quote,
@@ -313,7 +310,7 @@ def _block(b, theme):
         raise ValueError(f"unknown block type {t!r} (block {b.get('id')!r})")
     try:
         return _BLOCKS[t](b, theme)
-    except (KeyError, ValueError, ZeroDivisionError, IndexError, TypeError) as e:
+    except (KeyError, ValueError) as e:  # IR faults; renderer bugs propagate raw
         raise ValueError(f"block {b.get('id')!r} ({t}): {e}") from e
 
 # ---- cards and document ----------------------------------------------------
@@ -349,21 +346,28 @@ def render(ir, theme, out_path, css=""):
 
 # ---- CLI -------------------------------------------------------------------
 
-def _embed_images(blocks, base):
-    # CLI-side: rewrite image srcs to data URIs on the freshly parsed IR dict
-    # (local to main; nothing re-serialises it)
+def _embed_images(blocks, base, cache):
+    # CLI-side, parse-local dict. Contract (block-types.md): src resolves relative
+    # to deck.json; PPTX CLI resolves identically — data URIs are HTML packaging.
     for b in blocks:
         if b.get("type") == "image" and not str(b.get("src", "")).startswith("data:"):
             p = Path(b["src"])
             if not p.is_absolute():
                 p = base / p
-            if not p.exists():
-                raise FileNotFoundError(f"image not found for block {b.get('id')!r}: {p}")
-            mime = mimetypes.guess_type(p.name)[0] or "application/octet-stream"
-            b["src"] = f"data:{mime};base64,{base64.b64encode(p.read_bytes()).decode()}"
+            key = str(p.resolve())
+            if key not in cache:
+                if not p.exists():
+                    raise FileNotFoundError(f"image not found for block {b.get('id')!r}: {p}")
+                data = p.read_bytes()
+                if len(data) > 2_000_000:
+                    print(f"render_html: warning: {p.name} is {len(data)/1e6:.1f}MB embedded",
+                          file=sys.stderr)
+                mime = mimetypes.guess_type(p.name)[0] or "application/octet-stream"
+                cache[key] = f"data:{mime};base64,{base64.b64encode(data).decode()}"
+            b["src"] = cache[key]
         elif b.get("type") == "columns":
             for col in b.get("children", []):
-                _embed_images(col, base)
+                _embed_images(col, base, cache)
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
@@ -380,8 +384,9 @@ def main(argv=None):
         return 1
 
     try:
+        cache = {}
         for card in ir.get("cards", []):
-            _embed_images(card.get("blocks") or [], Path(args.ir).resolve().parent)
+            _embed_images(card.get("blocks") or [], Path(args.ir).resolve().parent, cache)
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         render(ir, theme, args.out, css=css_path.read_text(encoding="utf-8"))
     except (ValueError, FileNotFoundError) as e:

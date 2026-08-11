@@ -59,9 +59,13 @@ def _verb_forms():
 
 VERBS = _verb_forms()
 _TEMPORAL = re.compile(
-    r"^(q[1-4]|h[12]|fy ?\d{2,4}|\d{4}|w(ee)?k ?\d+|\d{1,2}[/.-]\d{1,2}([/.-]\d{2,4})?|"
+    r"^(q[1-4]|h[12]|fy ?\d{2,4}|(19|20)\d{2}|w(ee)?k ?\d+|"
+    r"\d{1,2}[/.-]\d{1,2}([/.-]\d{2,4})?|"
     r"(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*|"
     r"(mon|tue|wed|thu|fri|sat|sun)[a-z]*)$", re.I)
+
+
+IR_DIR = None  # set by main(); when None, image-existence is skipped (library use)
 
 
 def F(check, severity, message, card=None, block=None):
@@ -106,8 +110,14 @@ def _check_block_schema(b, cid, depth, f):
             f.append(F("schema-valid", "error", f"{t} block missing {field!r}", cid, bid))
     if t == "callout" and b.get("tone") not in TONES:
         f.append(F("schema-valid", "error", f"callout tone {b.get('tone')!r} not in {TONES}", cid, bid))
-    if t == "image" and b.get("fit") not in (None, "cover", "contain"):
-        f.append(F("schema-valid", "error", f"image fit {b.get('fit')!r} invalid", cid, bid))
+    if t == "image":
+        if b.get("fit") not in (None, "cover", "contain"):
+            f.append(F("schema-valid", "error", f"image fit {b.get('fit')!r} invalid", cid, bid))
+        src = str(b.get("src") or "")
+        if IR_DIR and src and not src.startswith("data:"):
+            pth = Path(src) if Path(src).is_absolute() else IR_DIR / src
+            if not pth.exists():
+                f.append(F("schema-valid", "error", f"image src not found: {src}", cid, bid))
     if t == "columns":
         ch = b.get("children")
         if not isinstance(ch, list) or len(ch) not in (2, 3):
@@ -157,7 +167,8 @@ def check_schema(ir):
             f.append(F("schema-valid", "error", "card missing id"))
         elif cid in ids:
             f.append(F("schema-valid", "error", f"duplicate id {cid!r}"))
-        ids[cid] = True
+        else:
+            ids[cid] = True
         lay = c.get("layout")
         if lay not in LAYOUTS:
             f.append(F("schema-valid", "error", f"layout {lay!r} not in {LAYOUTS}", cid))
@@ -175,7 +186,8 @@ def check_schema(ir):
             if bid:
                 if bid in ids:
                     f.append(F("schema-valid", "error", f"duplicate id {bid!r}", cid))
-                ids[bid] = True
+                else:
+                    ids[bid] = True
             _check_block_schema(b, cid, depth, f)
     return f
 
@@ -199,9 +211,32 @@ def check_provenance(ir):
     return f
 
 
+IMPERATIVES = {"approve", "adopt", "fund", "invest", "launch", "ship", "buy",
+               "sell", "hire", "stop", "start", "expand", "double", "cut", "kill",
+               "pause", "delay", "accelerate", "choose", "pick", "commit", "sign",
+               "renew", "cancel", "greenlight", "prioritize", "fix", "split"}
+DIRECTIONAL = {"up", "down", "flat", "above", "below", "under", "over", "ahead",
+               "behind", "past", "vs", "versus"}
+
+
 def _is_claim(title):
-    toks = re.findall(r"[a-z']+", str(title).lower())
-    return any(t in AUX or t in VERBS or (t.endswith("ed") and len(t) > 4) for t in toks)
+    """Heuristic, not NLP. Casing carries the signal: a Title-Case noun phrase
+    capitalises its nouns ("Cost Reduction Plan"), while a sentence-case claim
+    leaves its verb lowercase ("Q3 revenue fell 14%"). Also accepts imperatives
+    ("Approve ...") and verb-less figure claims ("Churn up 12% since April")."""
+    t = str(title)
+    words = re.findall(r"[A-Za-z][A-Za-z']*", t)
+    if not words:
+        return False
+    lower = [w.lower() for w in words]
+    if any(w in AUX for w in lower):
+        return True
+    if lower[0] in IMPERATIVES:
+        return True
+    if re.search(r"\d", t) and any(w in DIRECTIONAL for w in lower):
+        return True
+    return any(w.islower() and (w in VERBS or (w.endswith("ed") and len(w) > 4))
+               for w in words[1:])
 
 
 def check_title_claim(ir):
@@ -257,7 +292,8 @@ def check_one_message(ir):
 def check_evidence(ir):
     f = []
     for c in _content_cards(ir):
-        has_ev = any(b.get("type") != "text" for b, _ in _iter_blocks(c.get("blocks")))
+        has_ev = any(b.get("type") not in ("text", "divider", "columns")
+                     for b, _ in _iter_blocks(c.get("blocks")))
         if not has_ev and not re.search(r"\d", str(c.get("title") or "")):
             f.append(F("evidence-present", "warn", "no non-text block and no figure in title", c.get("id")))
     return f
@@ -292,8 +328,9 @@ def check_chart_fit(ir):
             kind, cid, bid = b["chart"], c.get("id"), b.get("id")
             temporal = sum(1 for x in cats if _TEMPORAL.match(str(x).strip()))
             is_time = cats and temporal >= max(2, len(cats) / 2)
-            if is_time and kind != "line":
-                f.append(F("chart-fit", "warn", f"time-series categories suit line, not {kind}", cid, bid))
+            # short temporal runs (quarterly bars, 4 points) are standard practice
+            if is_time and kind != "line" and len(cats) >= 5:
+                f.append(F("chart-fit", "warn", f"{len(cats)}-point time series suits line, not {kind}", cid, bid))
             elif not is_time and kind == "line":
                 f.append(F("chart-fit", "warn", "categorical comparison suits bar/hbar, not line", cid, bid))
             if kind == "pie" and len(cats) > 5:
@@ -319,12 +356,31 @@ def _ratio(fg, bg):
     return (l1 + 0.05) / (l2 + 0.05)
 
 
+def _is_hex(v):
+    s = str(v).strip()
+    return len(s) == 7 and s[0] == "#" and all(ch in "0123456789abcdefABCDEF" for ch in s[1:])
+
+
 def check_contrast(theme):
     c, f = theme["color"], []
+    flat = {k: c.get(k) for k in ("bg", "surface", "text", "muted", "accent")}
+    flat.update({f"series[{i}]": v for i, v in enumerate(c.get("series") or [])})
+    flat.update({f"tone.{k}": v for k, v in (c.get("tone") or {}).items()})
+    bad = {k for k, v in flat.items() if not _is_hex(v)}
+    for k in sorted(bad):
+        f.append(F("contrast", "error", f"theme colour {k} must be #RRGGBB hex, got {flat[k]!r}"))
+    ok = lambda *ks: not any(k in bad for k in ks)
     for fg, bg in (("text", "bg"), ("text", "surface"), ("muted", "bg"), ("muted", "surface")):
-        r = _ratio(c[fg], c[bg])
-        if r < 4.5:
+        if ok(fg, bg) and (r := _ratio(c[fg], c[bg])) < 4.5:
             f.append(F("contrast", "error", f"{fg} on {bg} is {r:.2f}:1 (needs 4.5:1)"))
+    if ok("accent", "bg") and (r := _ratio(c["accent"], c["bg"])) < 3.0:
+        f.append(F("contrast", "warn", f"accent on bg is {r:.2f}:1 (large-text floor is 3:1)"))
+    series = [v for i, v in enumerate(c.get("series") or []) if f"series[{i}]" not in bad]
+    rgb = lambda h: tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
+    for a, b in zip(series, series[1:]):
+        d = sum((x - y) ** 2 for x, y in zip(rgb(a), rgb(b))) ** 0.5
+        if d < 60:
+            f.append(F("contrast", "warn", f"adjacent series colours {a}/{b} are hard to distinguish"))
     return f
 
 
@@ -355,7 +411,11 @@ def _block_h(b, th, width, scale):
     if t == "chart":
         return 240 + ((cap * lh + gap / 2) if b.get("caption") else 0)
     if t == "table":
-        return (len(b.get("rows") or []) + 1) * (body * lh + 2 * gap / 3)
+        headers, rows = b.get("headers") or [], b.get("rows") or []
+        colw = width / max(1, len(headers))
+        row_h = lambda cells: (max((_text_lines(x, body, colw) for x in cells), default=1)
+                               * body * lh + 2 * gap / 3)
+        return row_h(headers) + sum(row_h(r) for r in rows)
     if t == "callout":
         return _text_lines(b.get("text", ""), body, width - 2 * gap) * body * lh + 2 * gap / 1.5
     if t == "quote":
@@ -423,8 +483,14 @@ def main(argv=None):
                     help="revision-pass count recorded into findings.json")
     args = ap.parse_args(argv)
 
-    ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
-    theme = json.loads(Path(args.theme).read_text(encoding="utf-8")) if args.theme else None
+    global IR_DIR
+    IR_DIR = Path(args.ir).resolve().parent
+    try:
+        ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
+        theme = json.loads(Path(args.theme).read_text(encoding="utf-8")) if args.theme else None
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"validate: cannot load input: {e}", file=sys.stderr)
+        return 1
     if theme is None:
         print("validate: no --theme given; contrast, min-type-size and overflow "
               "checks skipped", file=sys.stderr)

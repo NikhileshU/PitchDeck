@@ -7,6 +7,8 @@ binary is autodetected from a fixed candidate list or passed via --browser.
 """
 
 import argparse
+import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -30,7 +32,6 @@ def find_browser(override=None):
         if Path(override).exists():
             return override
         raise FileNotFoundError(f"--browser not found: {override}")
-    import os
     for c in CANDIDATES:
         if os.access(c, os.X_OK):
             return c
@@ -59,9 +60,15 @@ def export(html_path, out_path, browser, no_sandbox=False):
     if not out.exists() or out.stat().st_size == 0:
         raise RuntimeError(
             f"browser produced no PDF (exit {proc.returncode}):\n{proc.stderr[-2000:]}")
-    with open(out, "rb") as f:
-        if f.read(5) != b"%PDF-":
-            raise RuntimeError(f"{out} is not a PDF")
+    raw = out.read_bytes()
+    if raw[:5] != b"%PDF-":
+        raise RuntimeError(f"{out} is not a PDF")
+    # one card must equal one page — a mismatch means clipping or pagination fault
+    cards = Path(html_path).read_text(encoding="utf-8").count('class="card ')
+    pages = len(re.findall(rb"/Type\s*/Page[^s]", raw))
+    if cards and pages != cards:
+        raise RuntimeError(f"PDF has {pages} pages for {cards} cards — "
+                           "content overflowed the page or pagination broke")
     if proc.returncode != 0:
         print(f"export_pdf: warning: browser exited {proc.returncode} after writing "
               f"the PDF:\n{proc.stderr[-1000:]}", file=sys.stderr)

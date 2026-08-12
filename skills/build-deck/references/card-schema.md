@@ -137,10 +137,18 @@ The renderers are peers, but they must agree on *where things go*:
    `render_html.py` reaches the same geometry by top-down flow with `blockGap`
    gaps — same order, same top edges, modulo browser text-wrap variance inside a
    block (the browser may wrap a line earlier or later; it may never reorder).
-4. **Centered layouts** (`title`, `section`, `hero`) stack the same way, with the
-   whole stack centered vertically: top = (540 − total content height) / 2.
+4. **Centered layouts** (`title`, `section`) stack the same way, with the whole
+   stack centered vertically: top = (540 − total content height) / 2.
+   **`hero` splits by content** (§4): a `hero` with an `image` renders it
+   full-bleed — there is no stack to center, and the title overlays it; a `hero`
+   with a `kpi` or title only centers vertically like `title`/`section`.
 5. **Peer agreement is checkpointed** (spec §14, phase 9): `all-blocks.json`
    through both renderers — same block order, same top edge.
+6. **No auto-fit, ever.** `render_pptx.py` sets `text_frame.auto_size = None`
+   and `text_frame.vertical_anchor = MSO_ANCHOR.TOP` on every frame it creates.
+   PowerPoint's default shrink-to-fit would absorb overflow that §5 requires to
+   surface as a Tier-1 error — a deck that validates clean must not silently
+   render at reduced type.
 
 ---
 

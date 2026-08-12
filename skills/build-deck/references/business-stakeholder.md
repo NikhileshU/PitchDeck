@@ -78,6 +78,8 @@ lists every placeholder first; expect the user to be asked to confirm them.
 
 On every content card. What to *say*, not what is shown: the transition in, the
 one number to emphasise, the hard question this card will draw and its answer.
+Never restate the card title in the notes — the title already makes the claim;
+the notes carry what the title cannot.
 
 ## Density
 

@@ -117,6 +117,31 @@ Content area = `960 − 2×cardPad` wide × `540 − 2×cardPad` tall (pt, from 
 3. Still overflowing → **do not clip, do not shrink further.** Emit a Tier-1
    `overflow` error naming the card. The fix is to split the card in the IR.
 
+### 5.1 Alignment contract (both renderers)
+
+> **Post-freeze amendment (phase 9), deliberate.** Added so the PPTX renderer has
+> an explicit placement contract to be written against; it changes no field of the
+> schema, only pins down geometry both renderers already implied.
+
+The renderers are peers, but they must agree on *where things go*:
+
+1. **Blocks render in IR order.** Neither renderer reorders, drops, or merges
+   blocks. `columns` children render left-to-right in array order.
+2. **One shared stacking model, in pt.** Content origin is `(cardPad, cardPad)`.
+   Title height = wrapped lines × `cardTitle` × `lineHeight`. Block *k*'s top edge
+   = origin + titleH + blockGap + Σᵢ₍ᵢ₌₀…k−1₎ (hᵢ + blockGap). Block heights come
+   from the height model in `validate.py` (`_block_h`) — the single source: charts
+   and images occupy 240pt, tables per-row with cell wrapping, text by the
+   chars-per-line estimate.
+3. **`render_pptx.py` places frames at exactly these pt positions.**
+   `render_html.py` reaches the same geometry by top-down flow with `blockGap`
+   gaps — same order, same top edges, modulo browser text-wrap variance inside a
+   block (the browser may wrap a line earlier or later; it may never reorder).
+4. **Centered layouts** (`title`, `section`, `hero`) stack the same way, with the
+   whole stack centered vertically: top = (540 − total content height) / 2.
+5. **Peer agreement is checkpointed** (spec §14, phase 9): `all-blocks.json`
+   through both renderers — same block order, same top edge.
+
 ---
 
 ## 6. Data provenance

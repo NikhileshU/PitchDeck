@@ -407,7 +407,7 @@ Each phase has a checkpoint. Do not start the next phase until the checkpoint pa
 | 6 | `report.py` — build alongside §5, not after | Produces both the inline summary and `report.md` from `findings.json` + `judge.json`. |
 | 7 | `business-stakeholder.md` playbook + `build-deck/SKILL.md` | — |
 | 8 | **Generate one real deck end to end.** | Open the PDF. Read the report. Go/no-go before continuing. |
-| 9 | `render_pptx.py` — peer renderer against the frozen IR | Same fixture as phase 3. Text is selectable; charts and tables are native objects. |
+| 9 | `render_pptx.py` — peer renderer against the frozen IR | Same fixture as phase 3. Text is selectable; charts and tables are native objects. **Peer agreement:** `all-blocks.json` through both renderers — same block order, same top edge (card-schema.md §5.1). |
 | 10 | Golden set — 6 fixtures + `expected/` | Assert on full report output, not just pass/fail. |
 | 11 | Remaining 3 playbooks, `warm.json`, `mono.json`, `review-deck/SKILL.md` | — |
 | 12 | `plugin.json`, `README.md`, `requirements.txt`; package as `.plugin` | Structure validates; installs in Claude Code and Cowork. |

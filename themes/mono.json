@@ -1,0 +1,28 @@
+{
+  "name": "mono",
+  "color": {
+    "bg":      "#FAFAF9",
+    "surface": "#EFEFED",
+    "text":    "#17171A",
+    "muted":   "#57575E",
+    "accent":  "#17171A",
+    "series":  ["#1D1D21", "#40404A", "#63636E", "#868692", "#A9A9B6"],
+    "tone":    { "info": "#41414A", "warn": "#7A5B12", "good": "#2C5D46" }
+  },
+  "type": {
+    "family":   "Helvetica, Inter, system-ui, sans-serif",
+    "familyMono": "ui-monospace, monospace",
+    "scale": {
+      "title":     40,
+      "cardTitle": 28,
+      "body":      18,
+      "caption":   12
+    },
+    "lineHeight": 1.35
+  },
+  "space": {
+    "cardPad":  42,
+    "blockGap": 18,
+    "radius":    3
+  }
+}

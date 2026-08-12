@@ -66,22 +66,17 @@ def any_theme(request):
     return request.param, theme_for(request.param)
 
 
-def resolve_images(ir, base):
-    """Neither render() resolves relative image srcs — only the CLI main() does
-    (render_pptx._resolve_images / render_html._embed_images). A library caller
-    has to do it itself, so the tests do what the CLI does first."""
-    import render_pptx
-    for card in ir["cards"]:
-        render_pptx._resolve_images(card.get("blocks"), Path(base).resolve())
-    return ir
+# Fixtures hand back the IR exactly as it sits on disk, relative image srcs and
+# all. Resolving them here used to be necessary — render() skipped the step that
+# lived in each CLI's main() (R13-M1) — but both renderers now take `ir_dir`, so
+# a caller that needs images passes it and gets the same path the CLI runs.
 
 
 @pytest.fixture(params=RENDERABLE, ids=lambda p: p.stem)
 def renderable_ir(request):
-    ir = resolve_images(load(request.param), request.param.parent)
-    return request.param, ir
+    return request.param, load(request.param)
 
 
 @pytest.fixture(scope="session")
 def all_blocks():
-    return resolve_images(load(FIXTURES / "all-blocks.json"), FIXTURES)
+    return load(FIXTURES / "all-blocks.json")

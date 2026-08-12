@@ -18,11 +18,15 @@ import render_pptx
 
 
 class TestHtmlInvariants:
+    """css="" throughout: these assert on markup, not on layout, so rendering
+    unstyled is the deliberate choice. Omitting css entirely now raises (R13-M2)
+    — one card per page is a property of base.css, not of the renderer."""
+
     def test_renders_every_fixture_every_theme(self, renderable_ir, any_theme, tmp_path):
         path, ir = renderable_ir
         name, theme = any_theme
         out = tmp_path / "deck.html"
-        render_html.render(ir, theme, str(out))
+        render_html.render(ir, theme, str(out), css="")
         assert out.stat().st_size > 0
 
     def test_no_javascript(self, renderable_ir, slate, tmp_path):
@@ -30,7 +34,7 @@ class TestHtmlInvariants:
         <style> block would land here as an injected <script>."""
         _, ir = renderable_ir
         out = tmp_path / "deck.html"
-        render_html.render(ir, slate, str(out))
+        render_html.render(ir, slate, str(out), css="")
         html = out.read_text(encoding="utf-8")
         assert "<script" not in html.lower()
         assert "onclick" not in html.lower()
@@ -40,7 +44,7 @@ class TestHtmlInvariants:
         exactly this: srcs rewritten to absolute local paths."""
         _, ir = renderable_ir
         out = tmp_path / "deck.html"
-        render_html.render(ir, slate, str(out))
+        render_html.render(ir, slate, str(out), css="")
         html = out.read_text(encoding="utf-8")
         assert "file://" not in html
         for src in re.findall(r'<img[^>]+src="([^"]+)"', html):
@@ -49,7 +53,7 @@ class TestHtmlInvariants:
     def test_card_count_matches_ir(self, renderable_ir, slate, tmp_path):
         _, ir = renderable_ir
         out = tmp_path / "deck.html"
-        render_html.render(ir, slate, str(out))
+        render_html.render(ir, slate, str(out), css="")
         html = out.read_text(encoding="utf-8")
         assert html.count('class="card ') == len(ir["cards"])
 
@@ -57,8 +61,10 @@ class TestHtmlInvariants:
 class TestPptxInvariants:
     @staticmethod
     def _render(ir, theme, tmp_path):
+        # ir_dir: fixtures carry relative image srcs, as deck.json does on disk
+        from conftest import FIXTURES
         out = tmp_path / "deck.pptx"
-        render_pptx.render(ir, theme, str(out))
+        render_pptx.render(ir, theme, str(out), ir_dir=FIXTURES)
         return out
 
     def test_clause_6_no_autofit_anywhere(self, renderable_ir, slate, tmp_path):
@@ -162,6 +168,39 @@ class TestPptxInvariants:
         assert seen == {expected}, f"{name}: expected {expected}, got {seen}"
 
 
+class TestLineBudget:
+    """Both renderers are capped at 400 *code* lines (BUILD-SPEC §15, R13-N7).
+
+    The cap exists to stop the block switch accumulating logic that belongs
+    elsewhere. Counting raw lines measured the wrong thing: it taxed comments and
+    docstrings equally, and a bug fix was once paid for by deleting explanation.
+    Blanks, comments and docstrings are free; statements are not."""
+
+    CAP = 400
+
+    @staticmethod
+    def _code_lines(path):
+        import ast
+        src = path.read_text(encoding="utf-8")
+        lines = src.splitlines()
+        skip = sum(1 for line in lines if not line.strip() or line.strip().startswith("#"))
+        for node in ast.walk(ast.parse(src)):
+            if isinstance(node, (ast.Module, ast.FunctionDef, ast.ClassDef)):
+                if ast.get_docstring(node):
+                    doc = node.body[0]
+                    skip += doc.end_lineno - doc.lineno + 1
+        return len(lines) - skip
+
+    @pytest.mark.parametrize("name", ["render_html.py", "render_pptx.py"])
+    def test_renderer_is_within_the_code_budget(self, name):
+        from conftest import ROOT
+        n = self._code_lines(ROOT / "scripts" / name)
+        assert n <= self.CAP, (
+            f"{name} is {n} code lines, over the {self.CAP} cap — if the block "
+            "switch has grown logic, move it, do not delete comments to fit"
+        )
+
+
 class TestLibraryImageResolution:
     """R13-M1. Image srcs resolve relative to deck.json (block-types.md), and that
     step used to live in each CLI's main(), so `render()` called as a library got
@@ -180,7 +219,7 @@ class TestLibraryImageResolution:
     def test_html_embeds_relative_srcs_given_ir_dir(self, slate, tmp_path):
         ir, base = self._raw_ir()
         out = tmp_path / "deck.html"
-        render_html.render(ir, slate, str(out), ir_dir=base)
+        render_html.render(ir, slate, str(out), css="", ir_dir=base)
         html = out.read_text(encoding="utf-8")
         srcs = re.findall(r'<img[^>]+src="([^"]+)"', html)
         assert srcs, "fixture no longer has image blocks — pick another"
@@ -239,7 +278,7 @@ class TestRendererErrorParity:
                        "blocks": [block], "notes": "n"}],
         }
         with pytest.raises(ValueError) as html_err:
-            render_html.render(ir, slate, str(tmp_path / "d.html"))
+            render_html.render(ir, slate, str(tmp_path / "d.html"), css="")
         with pytest.raises(ValueError) as pptx_err:
             render_pptx.render(ir, slate, str(tmp_path / "d.pptx"))
         assert "c1" in str(html_err.value) and "c1" in str(pptx_err.value)

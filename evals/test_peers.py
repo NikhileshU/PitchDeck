@@ -15,7 +15,7 @@ from pptx import Presentation
 import render_pptx  # noqa: E402
 from validate import _block_h, _text_lines  # noqa: E402
 
-from conftest import theme_for
+from conftest import FIXTURES, theme_for
 
 EMU_PER_PT = 12700
 TOLERANCE_PT = 0.01
@@ -135,6 +135,6 @@ class TestPeerGeometryAcrossThemes:
         for name in ("slate", "warm", "mono"):
             theme = theme_for(name)
             out = tmp_path / f"{name}.pptx"
-            render_pptx.render(all_blocks, theme, str(out))
+            render_pptx.render(all_blocks, theme, str(out), ir_dir=FIXTURES)
             baselines[name] = expected_tops(all_blocks, theme)
         assert baselines["slate"] == baselines["warm"] == baselines["mono"]

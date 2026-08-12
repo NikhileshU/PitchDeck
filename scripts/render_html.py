@@ -360,8 +360,17 @@ def _embed_images(blocks, base, cache):
             for col in b.get("children", []):
                 _embed_images(col, base, cache)
 
-def render(ir, theme, out_path, css="", ir_dir=None):
-    """css text and ir_dir are passed in, never discovered (invariant 3); given ir_dir, render() embeds images itself."""
+def render(ir, theme, out_path, css=None, ir_dir=None):
+    """css text and ir_dir are passed in, never discovered (invariant 3); given ir_dir, render() embeds images itself.
+
+    css is the *text* of base.css. Omitting it raises: one card per page, and the
+    card box itself, are properties of that stylesheet, so an unstyled deck is not
+    a plainer deck — it is a broken one that paginates by content flow (R13-M2).
+    Pass css="" to render deliberately unstyled, which is what markup-level tests want.
+    """
+    if css is None:
+        raise ValueError("render_html needs the text of base.css in css= "
+                         "(pass css='' to render deliberately unstyled)")
     if ir_dir is not None:
         cache, ir = {}, copy.deepcopy(ir)  # embedding must not mutate the caller's IR
         for card in ir["cards"]:
@@ -381,8 +390,12 @@ def main(argv=None):
     for a in ("--ir", "--theme", "--out"): ap.add_argument(a, required=True)
     args = ap.parse_args(argv)
 
-    ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
-    theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
+    try:  # same shape as validate.py/report.py: a message, not a traceback (R13-L5)
+        ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
+        theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"render_html: cannot load input: {e}", file=sys.stderr)
+        return 1
     css_path = Path(args.theme).with_name("base.css")
     if not css_path.exists():
         print(f"render_html: base.css not found next to theme: {css_path}", file=sys.stderr)

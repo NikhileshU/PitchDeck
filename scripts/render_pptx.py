@@ -333,8 +333,12 @@ def main(argv=None):
     ap.add_argument("--theme", required=True)
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
-    ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
-    theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
+    try:  # same shape as validate.py/report.py: a message, not a traceback (R13-L5)
+        ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
+        theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"render_pptx: cannot load input: {e}", file=sys.stderr)
+        return 1
     try:
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         render(ir, theme, args.out, ir_dir=Path(args.ir).resolve().parent)

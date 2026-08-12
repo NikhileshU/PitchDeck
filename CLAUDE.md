@@ -54,7 +54,7 @@ Violating any of these breaks the architecture.
 - Write OOXML by hand. If python-pptx can't do it, drop the feature — don't work around it in raw XML.
 - Add a config framework, a plugin system, or an abstraction layer for a second LLM provider.
 - Add block types or card layouts beyond the specified 10 and 4.
-- Let `render_html.py` or `render_pptx.py` exceed **400 lines**.
+- Let `render_html.py` or `render_pptx.py` exceed **400 code lines** each (blanks, comments and docstrings excluded — explanation is free, logic is not). Enforced by a test, not by eye.
 - Introduce a class hierarchy. Plain functions and dicts.
 - Use JavaScript in rendered HTML. Charts are server-generated inline SVG.
 - Auto-fix a `concern`. Concerns are surfaced for the human, never resolved by the agent.
@@ -116,7 +116,7 @@ evals/run_golden.py                    test harness, not a shipped script
 | 7 | `business-stakeholder.md`, `build-deck/SKILL.md` | Playbook complete |
 | 8 | **Generate one real deck** | **Human go/no-go. Stop and wait.** |
 | 9 | `render_pptx.py` | Same fixture as phase 3. Text selectable, charts and tables are native objects |
-| 10 | Golden set (6 fixtures + `expected/`) | Assert on full report output, not just pass/fail |
+| 10 | Golden set (9 fixtures + `expected/`) | Assert on full report output, not just pass/fail; `--coverage` → 14/14 checks fired |
 | 11 | 3 remaining playbooks, `warm.json`, `mono.json`, `review-deck/SKILL.md` | — |
 | 12 | `plugin.json`, `README.md`, `requirements.txt`, package `.plugin` | Installs in Claude Code and Cowork |
 

@@ -28,7 +28,7 @@ These are non-negotiable. Violating any one of them breaks the architecture.
 
 1. **`deck.json` (the IR) is the only source of truth.** To fix a bad deck, regenerate the IR and re-render. Never hand-edit generated HTML, PPTX XML, or CSS to correct deck content.
 2. **Renderers are peers, never chained.** `render_html` and `render_pptx` both read the IR independently. PPTX is never produced from HTML.
-3. **Renderers are pure functions:** `render(ir: dict, theme: dict, out_path: str) -> None`. No globals, no environment reads, no network. All paths passed in as arguments.
+3. **Renderers are pure functions:** `render(ir: dict, theme: dict, out_path: str) -> None`, plus kwargs that are always *passed in, never discovered*: `css` on the HTML renderer (base.css **text**, not a path — omit it entirely and it raises rather than silently emitting an unstyled deck, R13-M2; pass `css=""` to mean unstyled deliberately) and `ir_dir=None` on both (the directory relative image srcs resolve against, R13-M1). No globals, no environment reads, no network. All paths passed in as arguments. **Neither renderer mutates the IR it is given** — image resolution works on a copy, so rendering one format can never break its peer.
 4. **`base.css` contains layout rules only.** Every colour, size, and spacing value is `var(--*)`. A hardcoded hex in `base.css` means the two renderers have silently diverged.
 5. **Themes are JSON, not CSS.** `render_pptx.py` cannot parse CSS. Both renderers read `themes/*.json`.
 6. **No archetype logic in renderers.** If `render_html.py` or `render_pptx.py` ever contains `if archetype == ...`, the separation is broken. Archetype shapes the IR (prompt-side), never the rendering.
@@ -426,7 +426,7 @@ Each phase has a checkpoint. Do not start the next phase until the checkpoint pa
 - Do not write OOXML by hand. If python-pptx cannot do something, drop the feature or change the block spec — do not work around it in raw XML.
 - Do not add a config framework, plugin system, or abstraction layer for a second LLM provider.
 - Do not add block types or card layouts beyond the 10 and 4 specified.
-- Do not let `render_html.py` or `render_pptx.py` exceed **400 lines** each. If either does, the block switch has grown logic that belongs elsewhere.
+- Do not let `render_html.py` or `render_pptx.py` exceed **400 code lines** each — blanks, comments and docstrings do not count (R13-N7: counting raw lines taxed explanation, and a bug fix was once paid for by deleting docstrings). If either does, the block switch has grown logic that belongs elsewhere. Enforced by `evals/test_renderers.py::TestLineBudget`.
 - Do not introduce a class hierarchy. Plain functions and dicts.
 - Do not use JavaScript in the rendered HTML. Charts are server-generated SVG.
 - Do not put archetype names anywhere in `scripts/`.

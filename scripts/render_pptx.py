@@ -333,17 +333,17 @@ def main(argv=None):
     ap.add_argument("--theme", required=True)
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
-    try:  # same shape as validate.py/report.py: a message, not a traceback (R13-L5)
+    # One guard over the whole run — see render_html.main: a CLI fails with a
+    # message, never a traceback (R13-L5, widened). OSError covers an unreadable
+    # --ir and an unwritable --out; ValueError covers malformed JSON and this
+    # module's own raises; KeyError/TypeError cover valid JSON that is not a deck.
+    try:
         ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
         theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as e:
-        print(f"render_pptx: cannot load input: {e}", file=sys.stderr)
-        return 1
-    try:
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         render(ir, theme, args.out, ir_dir=Path(args.ir).resolve().parent)
-    except (ValueError, FileNotFoundError) as e:
-        print(f"render_pptx: {e}", file=sys.stderr)
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        print(f"render_pptx: {type(e).__name__}: {e}", file=sys.stderr)
         return 1
     return 0
 

@@ -390,22 +390,23 @@ def main(argv=None):
     for a in ("--ir", "--theme", "--out"): ap.add_argument(a, required=True)
     args = ap.parse_args(argv)
 
-    try:  # same shape as validate.py/report.py: a message, not a traceback (R13-L5)
+    # One guard over the whole run — a CLI fails with a message, never a traceback
+    # (R13-L5, widened). OSError covers an unreadable --ir and an unwritable --out;
+    # ValueError covers malformed JSON and this module's own raises; KeyError and
+    # TypeError cover valid JSON that is not a deck, which reaches past the parse
+    # into the first field access.
+    try:
         ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
         theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as e:
-        print(f"render_html: cannot load input: {e}", file=sys.stderr)
-        return 1
-    css_path = Path(args.theme).with_name("base.css")
-    if not css_path.exists():
-        print(f"render_html: base.css not found next to theme: {css_path}", file=sys.stderr)
-        return 1
-    try:
+        css_path = Path(args.theme).with_name("base.css")
+        if not css_path.exists():
+            print(f"render_html: base.css not found next to theme: {css_path}", file=sys.stderr)
+            return 1
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         render(ir, theme, args.out, css=css_path.read_text(encoding="utf-8"),
                ir_dir=Path(args.ir).resolve().parent)
-    except (ValueError, FileNotFoundError) as e:
-        print(f"render_html: {e}", file=sys.stderr)
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        print(f"render_html: {type(e).__name__}: {e}", file=sys.stderr)
         return 1
     return 0
 

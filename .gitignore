@@ -4,3 +4,4 @@ __pycache__/
 CONTEXT.md
 .claude/settings.local.json
 .dual-graph/
+pitchdeck-review-issues.xlsx

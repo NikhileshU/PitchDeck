@@ -1,0 +1,14 @@
+{
+  "scores": {
+    "storyline":     { "score": 4, "note": "Titles read as an argument: cost → duplication → fit → alternatives → ask. c8's timeline title is a statement of fact, not part of the argument — acceptable for an appendix." },
+    "verticalLogic": { "score": 4, "note": "Each card's evidence backs its own title; c5's 92% claim leans on usage logs that are referenced but not shown on the card." },
+    "archetypeFit":  { "score": 5, "note": "Recommendation on card 2, problem → solution → ask in the prescribed order, appendix excluded from the count." },
+    "audienceFit":   { "score": 4, "note": "Cost, coverage, deadline and rollback are the right altitude for a budget owner; the seat-duplication chart may invite a tangent on licence hygiene." },
+    "density":       { "score": 4, "note": "Every card is two blocks or fewer plus a title claim; c6's four-row table is the densest card and still reads in under 30 seconds." }
+  },
+  "concerns": [
+    { "card": "c5", "message": "The 92% coverage claim rests on usage-log analysis that is cited but not attached — soften the claim or bring the analysis" },
+    { "card": null, "message": "No migration-risk card in the main line; the room will ask what breaks during the eight weeks before anyone reaches the appendix" },
+    { "card": "c6", "message": "Comparison criteria read as chosen after the decision — adding security-review status would blunt that objection" }
+  ]
+}

@@ -75,7 +75,8 @@ deck-builder/
 │       ├── 03-buried-answer.json       (bad: recommendation on card 9)
 │       ├── 04-overflow.json            (bad: card exceeds height)
 │       ├── 05-placeholder-data.json    (bad: unlabelled invented metrics)
-│       ├── 06-good-pitch.json
+│       ├── 06-warn-titles.json         (warn path: noun-phrase titles, no error)
+│       ├── 07-good-pitch.json
 │       └── expected/                   one .json per fixture
 ├── requirements.txt
 └── README.md
@@ -297,7 +298,7 @@ report.py       --findings findings.json --judge judge.json --ir deck.json --out
 |---|---|---|
 | `schema-valid` | Conforms to §4; required fields present; ids unique | error |
 | `data-provenance` | Every `chart`/`table`/`kpi` has `source`; every `placeholder` is collected for the report | error |
-| `title-is-claim` | Every `content` card title contains a finite verb; is not a bare noun phrase | error |
+| `title-is-claim` | Every `content` card title contains a finite verb; is not a bare noun phrase | warn; **error** when the title has ≤3 alphabetic tokens AND no strong figure AND no verb token (deterministic heuristics cannot grade English claims at error severity — the Tier-2 judge owns claim quality, §11) |
 | `answer-first` | `business-stakeholder`, `idea-pitch`: a card with `role: recommendation` appears within the first 3 | error |
 | `card-count` | startup-pitch ≤15, product-demo ≤12, idea-pitch ≤10, business-stakeholder ≤20 excluding `role: appendix` | error |
 | `overflow` | Card fits after the 15% ramp-down floor (§8) | error |
@@ -330,6 +331,8 @@ Scored by Claude reading `deck.json` against the archetype playbook. Written to 
 
 **Gate: mean ≥ 3.5 and no single dimension below 3.**
 
+Claim quality of card titles is an **error-grade Tier-2 responsibility**: the judge reads titles with real language understanding and scores non-claim titles down in `storyline`/`verticalLogic`. Tier-1's `title-is-claim` only warns, except for the narrow deterministic error in §10.
+
 Claude also emits up to **5 concerns** — editorial observations that break no rule (redundant cards, unquantified asks, missing baselines, unsupported assumptions).
 
 ---
@@ -345,6 +348,8 @@ Claude also emits up to **5 concerns** — editorial observations that break no 
 | `info` | Noted | Surfaced only in `report.md` |
 
 Concerns are never auto-resolved. Auto-fixing one means the agent silently overruling an editorial judgment it is not equipped to make.
+
+`info` findings surface in `report.md` §3 (Warnings) under **"Also noted"** — they have no section of their own. Phase-10 expected-output files assert against this placement.
 
 ---
 
@@ -403,8 +408,8 @@ Each phase has a checkpoint. Do not start the next phase until the checkpoint pa
 | 6 | `report.py` — build alongside §5, not after | Produces both the inline summary and `report.md` from `findings.json` + `judge.json`. |
 | 7 | `business-stakeholder.md` playbook + `build-deck/SKILL.md` | — |
 | 8 | **Generate one real deck end to end.** | Open the PDF. Read the report. Go/no-go before continuing. |
-| 9 | `render_pptx.py` — peer renderer against the frozen IR | Same fixture as phase 3. Text is selectable; charts and tables are native objects. |
-| 10 | Golden set — 6 fixtures + `expected/` | Assert on full report output, not just pass/fail. |
+| 9 | `render_pptx.py` — peer renderer against the frozen IR | Same fixture as phase 3. Text is selectable; charts and tables are native objects. **Peer agreement:** `all-blocks.json` through both renderers — same block order, same top edge (card-schema.md §5.1). |
+| 10 | Golden set — 7 fixtures (01–07; the pitch fixture is `07-good-pitch.json`, since 06 asserts the title-warn path) + `expected/` | Assert on full report output, not just pass/fail. |
 | 11 | Remaining 3 playbooks, `warm.json`, `mono.json`, `review-deck/SKILL.md` | — |
 | 12 | `plugin.json`, `README.md`, `requirements.txt`; package as `.plugin` | Structure validates; installs in Claude Code and Cowork. |
 

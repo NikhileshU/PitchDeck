@@ -1,0 +1,287 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Analytics Consolidation Decision</title><style>@page { size: 1280.0px 720.0px; margin: 0; }
+:root { --color-bg: #0F1419; --color-surface: #1A2027; --color-text: #E8EAED; --color-muted: #9AA4AF; --color-accent: #4F9CF9; --color-series-1: #4F9CF9; --color-series-2: #7C5CFF; --color-series-3: #2DD4A7; --color-series-4: #F2B13C; --color-series-5: #F27A7A; --color-tone-info: #4F9CF9; --color-tone-warn: #F2B13C; --color-tone-good: #2DD4A7; --type-family: Inter, system-ui, sans-serif; --type-family-mono: ui-monospace, monospace; --type-title: 53.33px; --type-card-title: 37.33px; --type-body: 24.0px; --type-caption: 16.0px; --type-line-height: 1.35; --space-card-pad: 56.0px; --space-block-gap: 24.0px; --space-radius: 12.0px; --card-w: 1280.0px; --card-h: 720.0px; --stroke-hairline: 1.33px; --stroke-accent: 6.0px; }
+/*
+ * base.css — layout only. Zero hex literals, zero id selectors.
+ *
+ * Every colour, size, and spacing value is a custom property. render_html.py
+ * emits the following variables on :root, converting every dimensional theme
+ * value from pt to CSS px (x 4/3):
+ *
+ *   --color-bg --color-surface --color-text --color-muted --color-accent
+ *   --color-series-1 ... --color-series-5
+ *   --color-tone-info --color-tone-warn --color-tone-good
+ *   --type-family --type-family-mono
+ *   --type-title --type-card-title --type-body --type-caption   (px)
+ *   --type-line-height                                          (unitless)
+ *   --space-card-pad --space-block-gap --space-radius           (px)
+ *   --card-w --card-h              spec constants: 960pt, 540pt -> 1280px, 720px
+ *   --stroke-hairline              1pt   -> 1.333px  (table rules, divider)
+ *   --stroke-accent                4.5pt -> 6px      (accent rule, callout bar)
+ *
+ * The page-size rule for PDF export (at-page) is emitted by the renderer, not
+ * defined here, because at-page cannot read custom properties.
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--color-bg);
+  font-family: var(--type-family);
+  line-height: var(--type-line-height);
+  color: var(--color-text);
+}
+
+/* ---- card frame ---------------------------------------------------- */
+
+.deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card {
+  width: var(--card-w);
+  height: var(--card-h);
+  padding: var(--space-card-pad);
+  background: var(--color-bg);
+  position: relative;
+  /* no overflow:hidden — the schema forbids clipping. Overflow must fail loudly
+     (validate.py emits a Tier-1 error); a clipped card is a silent failure. */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- layouts (exactly 4) ------------------------------------------- */
+
+.card--title {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.card--title .card-title {
+  font-size: var(--type-title);
+}
+
+.card--title::after {
+  content: "";
+  width: calc(var(--space-card-pad) * 2);
+  height: var(--stroke-accent);
+  background: var(--color-accent);
+  margin-top: var(--space-block-gap);
+}
+
+.card--section {
+  background: var(--color-surface);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.card--section .card-title {
+  font-size: var(--type-title);
+}
+
+.card--content .card-title {
+  font-size: var(--type-card-title);
+  margin-bottom: var(--space-block-gap);
+}
+
+.card--content .card-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-block-gap);
+  flex: 1;
+  min-height: 0;
+}
+
+.card--hero {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.card--hero .card-title {
+  font-size: var(--type-title);
+  position: relative; /* sits above a full-bleed hero image */
+}
+
+.card--hero .b-kpi .b-kpi-value {
+  font-size: calc(var(--type-title) * 2);
+}
+
+.card--hero .b-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.card-subtitle {
+  font-size: var(--type-body);
+  color: var(--color-muted);
+  margin-top: var(--space-block-gap);
+}
+
+/* ---- blocks (exactly 10) ------------------------------------------- */
+
+.b-text {
+  font-size: var(--type-body);
+}
+
+.b-text--emphasis {
+  font-weight: 600;
+}
+
+.b-bullets {
+  font-size: var(--type-body);
+  list-style-position: outside;
+  padding-left: calc(var(--space-block-gap) * 1.5);
+}
+
+.b-bullets li + li {
+  margin-top: calc(var(--space-block-gap) / 2);
+}
+
+.b-kpi {
+  display: flex;
+  flex-direction: column;
+}
+
+.b-kpi-value {
+  font-size: var(--type-title);
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.b-kpi-label {
+  font-size: var(--type-body);
+}
+
+.b-kpi-delta {
+  font-size: var(--type-caption);
+  color: var(--color-muted);
+}
+
+.b-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.b-chart figcaption {
+  font-size: var(--type-caption);
+  color: var(--color-muted);
+  margin-top: calc(var(--space-block-gap) / 2);
+}
+
+.b-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-body);
+}
+
+.b-table th {
+  text-align: left;
+  font-size: var(--type-caption);
+  color: var(--color-muted);
+  border-bottom: var(--stroke-hairline) solid var(--color-muted);
+}
+
+.b-table th,
+.b-table td {
+  padding: calc(var(--space-block-gap) / 3) calc(var(--space-block-gap) / 2);
+}
+
+.b-table td {
+  border-bottom: var(--stroke-hairline) solid var(--color-surface);
+}
+
+.b-callout {
+  font-size: var(--type-body);
+  background: var(--color-surface);
+  border-radius: var(--space-radius);
+  padding: calc(var(--space-block-gap) / 1.5) var(--space-block-gap);
+}
+
+.b-callout--info {
+  border-left: var(--stroke-accent) solid var(--color-tone-info);
+}
+
+.b-callout--warn {
+  border-left: var(--stroke-accent) solid var(--color-tone-warn);
+}
+
+.b-callout--good {
+  border-left: var(--stroke-accent) solid var(--color-tone-good);
+}
+
+.b-quote {
+  font-size: var(--type-body);
+  font-style: italic;
+  border-left: var(--stroke-accent) solid var(--color-accent);
+  padding-left: var(--space-block-gap);
+}
+
+.b-quote cite {
+  display: block;
+  font-size: var(--type-caption);
+  font-style: normal;
+  color: var(--color-muted);
+  margin-top: calc(var(--space-block-gap) / 2);
+}
+
+.b-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.b-image--cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.b-image--contain {
+  object-fit: contain;
+}
+
+.b-columns {
+  display: grid;
+  gap: var(--space-block-gap);
+  align-items: start;
+}
+
+.b-columns--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.b-columns--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.b-columns .b-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-block-gap);
+  min-width: 0;
+}
+
+.b-divider {
+  border: 0;
+  border-top: var(--stroke-hairline) solid var(--color-muted);
+}
+
+/* ---- print / PDF ---------------------------------------------------- */
+
+@media print {
+  .card {
+    break-after: page;
+  }
+}
+</style></head><body><main class="deck"><section class="card card--title" id="c1"><h2 class="card-title">Analytics Consolidation Decision</h2><p class="card-subtitle">Platform Engineering · August 2026</p></section><section class="card card--content" id="c2"><h2 class="card-title">Approve the $180K Metrio contract to replace three analytics tools</h2><div class="card-blocks"><div class="b-kpi"><span class="b-kpi-value">$108K</span><span class="b-kpi-label">net annual saving after consolidation</span><span class="b-kpi-delta">breakeven in month 8</span></div><div class="b-callout b-callout--info">Two incumbent renewals auto-execute September 30 — the decision window is now.</div></div></section><section class="card card--content" id="c3"><h2 class="card-title">Analytics spend hits $288K across three overlapping tools</h2><div class="card-blocks"><figure class="b-chart"><svg viewBox="0 0 1168.0 320.0" role="img" font-size="16.0" aria-label="Annual contract cost by tool (US$K)"><text x="194.7" y="314.4" text-anchor="middle" fill="var(--color-muted)">Dashly</text><path d="M169.1,296.0 L169.1,29.6 Q169.1,25.6 173.1,25.6 L216.3,25.6 Q220.3,25.6 220.3,29.6 L220.3,296.0 Z" fill="var(--color-series-1)"/><text x="194.7" y="20.0" text-anchor="middle" fill="var(--color-text)">132</text><text x="584.0" y="314.4" text-anchor="middle" fill="var(--color-muted)">Chartio</text><path d="M558.4,296.0 L558.4,103.3 Q558.4,99.3 562.4,99.3 L605.6,99.3 Q609.6,99.3 609.6,103.3 L609.6,296.0 Z" fill="var(--color-series-1)"/><text x="584.0" y="93.7" text-anchor="middle" fill="var(--color-text)">96</text><text x="973.3" y="314.4" text-anchor="middle" fill="var(--color-muted)">Plotdeck</text><path d="M947.7,296.0 L947.7,177.1 Q947.7,173.1 951.7,173.1 L994.9,173.1 Q998.9,173.1 998.9,177.1 L998.9,296.0 Z" fill="var(--color-series-1)"/><text x="973.3" y="167.5" text-anchor="middle" fill="var(--color-text)">60</text><line x1="0.0" y1="296.0" x2="1168.0" y2="296.0" stroke="var(--color-muted)" stroke-opacity="0.45"/></svg><figcaption>Annual contract cost by tool (US$K)</figcaption></figure><div class="b-callout b-callout--warn">All three contracts renewed last year without a consolidation review.</div></div></section><section class="card card--content" id="c4"><h2 class="card-title">Six teams pay twice for the same dashboards</h2><div class="card-blocks"><figure class="b-chart"><svg viewBox="0 0 1168.0 320.0" role="img" font-size="16.0" aria-label="Seats duplicated across two or more tools, by team"><text x="123.8" y="50.4" text-anchor="end" fill="var(--color-muted)">Growth</text><path d="M131.8,32.8 L1112.8,32.8 Q1116.8,32.8 1116.8,36.8 L1116.8,52.8 Q1116.8,56.8 1112.8,56.8 L131.8,56.8 Z" fill="var(--color-series-1)"/><text x="1122.4" y="50.4" fill="var(--color-text)">34</text><text x="123.8" y="127.2" text-anchor="end" fill="var(--color-muted)">Core Product</text><path d="M131.8,109.6 L939.0,109.6 Q943.0,109.6 943.0,113.6 L943.0,129.6 Q943.0,133.6 939.0,133.6 L131.8,133.6 Z" fill="var(--color-series-1)"/><text x="948.6" y="127.2" fill="var(--color-text)">28</text><text x="123.8" y="204.0" text-anchor="end" fill="var(--color-muted)">Data</text><path d="M131.8,186.4 L765.2,186.4 Q769.2,186.4 769.2,190.4 L769.2,206.4 Q769.2,210.4 765.2,210.4 L131.8,210.4 Z" fill="var(--color-series-1)"/><text x="774.8" y="204.0" fill="var(--color-text)">22</text><text x="123.8" y="280.8" text-anchor="end" fill="var(--color-muted)">Support</text><path d="M131.8,263.2 L388.6,263.2 Q392.6,263.2 392.6,267.2 L392.6,283.2 Q392.6,287.2 388.6,287.2 L131.8,287.2 Z" fill="var(--color-series-1)"/><text x="398.2" y="280.8" fill="var(--color-text)">9</text><line x1="131.8" y1="6.4" x2="131.8" y2="313.6" stroke="var(--color-muted)" stroke-opacity="0.45"/></svg><figcaption>Seats duplicated across two or more tools, by team</figcaption></figure><div class="b-callout b-callout--warn">Every new hire in these teams adds two licences by default.</div></div></section><section class="card card--content" id="c5"><h2 class="card-title">Metrio delivers 92% of current usage at 63% of the cost</h2><div class="card-blocks"><div class="b-kpi"><span class="b-kpi-value">92%</span><span class="b-kpi-label">of tracked dashboard usage covered by Metrio</span><span class="b-kpi-delta">from 6 months of usage logs</span></div><ul class="b-bullets"><li>The uncovered 8% is legacy exports two teams already plan to retire</li><li>$180K flat contract replaces $288K across three renewals</li><li>Migration runs inside Q4 with no new headcount</li></ul></div></section><section class="card card--content" id="c6"><h2 class="card-title">Two alternatives fall short on SSO and data residency</h2><div class="card-blocks"><table class="b-table"><thead><tr><th>Criterion</th><th>Metrio</th><th>Kepler BI</th><th>Graphline</th></tr></thead><tbody><tr><td>SAML SSO included</td><td>Yes</td><td>Enterprise tier only</td><td>Yes</td></tr><tr><td>EU data residency</td><td>Yes</td><td>Yes</td><td>No</td></tr><tr><td>Annual cost (like-for-like)</td><td>$180K</td><td>$214K</td><td>$168K</td></tr><tr><td>Usage coverage</td><td>92%</td><td>88%</td><td>71%</td></tr></tbody></table></div></section><section class="card card--content" id="c7"><h2 class="card-title">We need signatures before the September 30 renewal deadlines</h2><div class="card-blocks"><div class="b-callout b-callout--info">Dashly and Chartio renew automatically Sept 30; cancellation needs 30 days&#x27; notice.</div><p class="b-text">Signing by September 1 avoids a full year of double payment on two of the three tools. The ask: approve the Metrio contract and authorise the two cancellations.</p></div></section><section class="card card--content" id="c8"><h2 class="card-title">Migration runs eight weeks with the existing team</h2><div class="card-blocks"><ul class="b-bullets"><li>Weeks 1–2: SSO, workspace setup, top-20 dashboards rebuilt</li><li>Weeks 3–6: team-by-team migration, old tools read-only</li><li>Weeks 7–8: legacy export retirement and cancellation notices</li><li>Rollback point: end of week 4, before read-only cutover</li></ul></div></section></main></body></html>

@@ -117,6 +117,42 @@ Content area = `960 − 2×cardPad` wide × `540 − 2×cardPad` tall (pt, from 
 3. Still overflowing → **do not clip, do not shrink further.** Emit a Tier-1
    `overflow` error naming the card. The fix is to split the card in the IR.
 
+### 5.1 Alignment contract (both renderers)
+
+> **Post-freeze amendment (phase 9), deliberate.** Added so the PPTX renderer has
+> an explicit placement contract to be written against; it changes no field of the
+> schema, only pins down geometry both renderers already implied.
+
+The renderers are peers, but they must agree on *where things go*:
+
+1. **Blocks render in IR order.** Neither renderer reorders, drops, or merges
+   blocks. `columns` children render left-to-right in array order.
+2. **One shared stacking model, in pt.** Content origin is `(cardPad, cardPad)`.
+   Title height = wrapped lines × `cardTitle` × `lineHeight`. Block *k*'s top edge
+   = origin + titleH + blockGap + Σᵢ₍ᵢ₌₀…k−1₎ (hᵢ + blockGap). Block heights come
+   from the height model in `validate.py` (`_block_h`) — the single source: charts
+   and images occupy 240pt, tables per-row with cell wrapping, text by the
+   chars-per-line estimate.
+3. **`render_pptx.py` places frames at exactly these pt positions.**
+   `render_html.py` reaches the same geometry by top-down flow with `blockGap`
+   gaps — same order, same top edges, modulo browser text-wrap variance inside a
+   block (the browser may wrap a line earlier or later; it may never reorder).
+4. **Centered layouts** (`title`, `section`) stack the same way, with the whole
+   stack centered vertically: top = (540 − total content height) / 2.
+   **`hero` splits by content** (§4): a `hero` with an `image` renders it
+   full-bleed — there is no stack to center, and the title overlays it; a `hero`
+   with a `kpi` or title only centers vertically like `title`/`section`.
+5. **Peer agreement is checkpointed** (spec §14, phase 9): `all-blocks.json`
+   through both renderers — same block order, same top edge.
+6. **No auto-fit, ever.** `render_pptx.py` sets
+   `text_frame.auto_size = MSO_AUTO_SIZE.NONE` — the explicit `<a:noAutofit/>`
+   flag; python-pptx's literal `None` *removes* the element and means "inherit",
+   the opposite of the intent — and `text_frame.vertical_anchor = MSO_ANCHOR.TOP`
+   on every frame it creates, including table cells and autoshapes' implicit frames.
+   PowerPoint's default shrink-to-fit would absorb overflow that §5 requires to
+   surface as a Tier-1 error — a deck that validates clean must not silently
+   render at reduced type.
+
 ---
 
 ## 6. Data provenance

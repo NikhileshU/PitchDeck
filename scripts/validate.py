@@ -39,7 +39,7 @@ _LEMMAS = ("grow drive increase decrease decline miss require deliver show prove
            "suggest indicate confirm contradict undercut strengthen weaken "
            "outpace lag beat cut hit fall rise sell bring catch "
            "choose draw find fly lay leave meet put say see send set stand stick "
-           "tell think understand wear go come get write").split()
+           "tell think understand wear go come get write sit correlate scale").split()
 _IRREG = {"fell", "rose", "grew", "beat", "cut", "hit", "kept", "made", "took",
           "gave", "got", "ran", "went", "came", "wrote", "drove", "held", "led",
           "won", "lost", "spent", "paid", "built", "sank", "shrank", "broke",
@@ -216,6 +216,13 @@ DIRECTIONAL = {"up", "down", "flat", "above", "below", "under", "over", "ahead",
                "behind", "past"}
 DETERMINERS = {"the", "a", "an", "our", "my", "your", "their", "its", "this",
                "that", "these", "those"}
+# claims are sentences, and sentences carry function words; bare noun-phrase
+# labels ("Product Launch Timeline") almost never do
+FUNCTION = {"the", "a", "an", "of", "with", "in", "on", "for", "by", "to", "at",
+            "from", "into", "after", "before", "under", "over", "within", "across",
+            "between", "against", "among", "as", "than", "and", "but", "we", "our",
+            "us", "it", "its", "this", "that", "per", "since", "until", "while",
+            "when", "above", "below", "if", "so", "because"}
 # strong figure: 2+ digits, a %, currency, decimal, or magnitude suffix —
 # so a lone "Q4" never counts as evidence of a figure claim
 _FIGURE = re.compile(r"\d{2,}|\d\s?%|[$€£]\s?\d|\d\.\d|\d\s?(pp|[KMBx])\b")
@@ -227,6 +234,8 @@ def _is_claim(title):
     handled exception), so verb/aux tokens only count when non-first.
     Verb-less figure claims ("Churn up 12% since April") are accepted;
     bare vs-comparisons without a figure ("A build vs buy decision") are not.
+    Ambiguous noun/verb lemmas ("launch", "drop") only count as verbs when the
+    title also carries a function word — sentences have them, labels don't.
     Known residual: gerund/participle homonyms in second position."""
     words = [w.lower() for w in re.findall(r"[A-Za-z][A-Za-z']*", str(title))]
     if not words:
@@ -240,15 +249,40 @@ def _is_claim(title):
         return False
     if has_figure and any(w in DIRECTIONAL for w in words[1:]):
         return True
-    return any(w in VERBS
-               or (w.endswith("ed") and len(w) > 4 and words[i - 1] not in DETERMINERS)
-               for i, w in enumerate(words) if i > 0)
+    has_func = any(w in FUNCTION for w in words)
+    for i, w in enumerate(words):
+        if i == 0:
+            continue
+        if w.endswith("ed") and len(w) > 4 and words[i - 1] not in DETERMINERS:
+            return True
+        if w in VERBS and (w in _IRREG or has_func):
+            return True
+    return False
+
+
+def _has_verb_token(words):
+    return any(w in AUX or w in VERBS or w in IMPERATIVES
+               or (w.endswith("ed") and len(w) > 4) for w in words)
 
 
 def check_title_claim(ir):
-    return [F("title-is-claim", "error",
-              f"title is a noun phrase, not a claim: {c.get('title')!r}", c.get("id"))
-            for c in _content_cards(ir) if not _is_claim(c.get("title") or "")]
+    """Hybrid severity (spec §10): non-claims warn; the narrow error fires only
+    on short label-like titles — ≤3 alphabetic tokens, no strong figure, and no
+    verb token by any of _is_claim's signals. Known residual (accepted, not
+    fixed): two-token present-tense claims with out-of-lexicon verbs ("Margins
+    compress", "Latency spikes") still trip the narrow error. Claim quality at
+    error grade belongs to the Tier-2 judge (§11)."""
+    f = []
+    for c in _content_cards(ir):
+        title = str(c.get("title") or "")
+        if _is_claim(title):
+            continue
+        words = [w.lower() for w in re.findall(r"[A-Za-z][A-Za-z']*", title)]
+        narrow = (len(words) <= 3 and not _FIGURE.search(title)
+                  and not _has_verb_token(words))
+        f.append(F("title-is-claim", "error" if narrow else "warn",
+                   f"title is a noun phrase, not a claim: {c.get('title')!r}", c.get("id")))
+    return f
 
 
 def check_answer_first(ir):
@@ -341,6 +375,10 @@ def check_chart_fit(ir):
                 f.append(F("chart-fit", "warn", "categorical comparison suits bar/hbar, not line", cid, bid))
             if kind == "pie" and len(cats) > 5:
                 f.append(F("chart-fit", "warn", f"pie with {len(cats)} slices; use bar", cid, bid))
+            series = (b.get("data") or {}).get("series") or []
+            if len(series) > 5:
+                f.append(F("chart-fit", "warn", f"{len(series)} series exceed the 5 theme "
+                           "colours — fold into 'Other' or split the chart", cid, bid))
     return f
 
 

@@ -14,6 +14,7 @@ def _e(s): return html.escape(str(s), quote=True)
 
 def _fmt(v): return f"{v:g}" if isinstance(v, (int, float)) else str(v)
 
+# colours repeat past the theme's 5 — validate.py warns on >5 series upstream
 def _ser(j, ncolors): return f"var(--color-series-{j % ncolors + 1})"
 
 def _trunc(s, maxch): return s if len(s := str(s)) <= maxch else s[: max(1, maxch - 1)] + "…"
@@ -58,12 +59,13 @@ def _css_vars(theme):
 # ---- charts: inline SVG ----------------------------------------------------
 
 def _legend(series, fs, nc, W):
-    # returns (svg, rows); truncation is loud — a "+N more" marker, never silent
+    # returns (svg, rows); rows INCLUDES the third '+N more' marker row on overflow
+    # — callers use it to push the plot top down. Truncation is loud, never silent.
     x, y, sw, parts = 0.0, 0.0, fs * 0.75, []
     for j, s in enumerate(series):
         name = _trunc(s["name"], 18)
         w_item = sw + fs * 0.45 + len(name) * fs * 0.62 + fs * 1.4
-        if x > 0 and x + w_item > W:  # wrap; cap at two rows
+        if x > 0 and x + w_item > W:
             x, y = 0.0, y + fs * 1.4
             if y > fs * 1.5:
                 parts.append(f'<text x="0" y="{y + fs * 0.6:.1f}" '
@@ -100,8 +102,7 @@ def _chart_bar(cats, series, W, H, fs, nc):
     m, n = len(series), len(cats)
     vals = [float(v) for s in series for v in s["values"]]
     hi, lo = max(vals + [0.0]), min(vals + [0.0])
-    if hi == lo:
-        hi = 1.0
+    if hi == lo: hi = 1.0
     leg, lrows = _legend(series, fs, nc, W) if m > 1 else ("", 0)
     # below-baseline labels need room above the category-label row
     top = fs * (2.6 if m > 1 else 1.6) + max(0, lrows - 1) * fs * 1.5
@@ -131,8 +132,7 @@ def _chart_hbar(cats, series, W, H, fs, nc):
     m, n = len(series), len(cats)
     vals = [float(v) for s in series for v in s["values"]]
     hi, lo = max(vals + [0.0]), min(vals + [0.0])
-    if hi == lo:
-        hi = 1.0
+    if hi == lo: hi = 1.0
     leg, lrows = _legend(series, fs, nc, W) if m > 1 else ("", 0)
     top = (fs * 1.8 if m > 1 else fs * 0.4) + max(0, lrows - 1) * fs * 1.5
     lw = min(W * 0.3, max(len(str(c)) for c in cats) * fs * 0.62 + fs * 0.8)
@@ -244,6 +244,9 @@ def _chart_svg(b, theme):
         if len(s["values"]) != len(cats):
             raise ValueError(f"series {s.get('name')!r} has {len(s['values'])} values "
                              f"for {len(cats)} categories")
+        if not all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                   for v in s["values"]):
+            raise ValueError(f"series {s.get('name')!r} has non-numeric values")
     W, H = _px(960 - 2 * theme["space"]["cardPad"]), _px(240)
     fs = _px(theme["type"]["scale"]["caption"])
     body = _CHARTS[kind](cats, series, W, H, fs, len(theme["color"]["series"]))
@@ -291,6 +294,8 @@ def _b_image(b, theme):
     return f'<img class="b-image b-image--{fit}" src="{_e(b["src"])}" alt="{_e(b["alt"])}">'
 
 def _b_columns(b, theme):
+    if any(cb.get("type") == "columns" for col in b["children"] for cb in col):
+        raise ValueError("columns may not nest inside columns")
     cols = "".join('<div class="b-col">' + "".join(_block(cb, theme) for cb in col) + "</div>"
                    for col in b["children"])
     return f'<div class="b-columns b-columns--{len(b["children"])}">{cols}</div>'

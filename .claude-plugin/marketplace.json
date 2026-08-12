@@ -1,0 +1,18 @@
+{
+  "name": "pitchdeck",
+  "owner": {
+    "name": "Nikhilesh Upreti",
+    "email": "nikhilesh.upreti01@gmail.com"
+  },
+  "metadata": {
+    "description": "Personal marketplace for the deck-builder plugin",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "deck-builder",
+      "source": "./",
+      "description": "Prompt to presentation deck: HTML, PDF and native editable PPTX, gated by 14 deterministic checks and an LLM judge, with a quality report on every run."
+    }
+  ]
+}

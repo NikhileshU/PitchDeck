@@ -1,0 +1,303 @@
+{
+  "fixture": "09-malformed.json",
+  "theme": "slate",
+  "exit": 1,
+  "counts": {
+    "error": 14,
+    "warn": 13
+  },
+  "findings": [
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c2",
+      "block": null,
+      "message": "layout 'grid' not in ('title', 'section', 'content', 'hero')",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c3",
+      "block": null,
+      "message": "subtitle only valid on title/section layouts",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c3",
+      "block": "c3b1",
+      "message": "unknown block type 'timeline'",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c4",
+      "block": null,
+      "message": "block missing id",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c4",
+      "block": "c4b2",
+      "message": "callout tone 'danger' not in ('info', 'warn', 'good')",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c4",
+      "block": "c4b3",
+      "message": "image src not found: figures/nowhere.png",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c5",
+      "block": "c5b1",
+      "message": "table row 1 has 2 cells for 3 headers",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c5",
+      "block": "c5b2",
+      "message": "series length mismatch with categories",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c6",
+      "block": "c6b1",
+      "message": "pie values must be non-negative",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": "c7",
+      "block": "c7b3",
+      "message": "columns may not nest inside columns",
+      "resolved": false
+    },
+    {
+      "check": "schema-valid",
+      "severity": "error",
+      "card": null,
+      "block": null,
+      "message": "duplicate id 'c1'",
+      "resolved": false
+    },
+    {
+      "check": "title-is-claim",
+      "severity": "warn",
+      "card": "c5",
+      "block": null,
+      "message": "title is a noun phrase, not a claim: 'The table and the chart disagree with their own shape'",
+      "resolved": false
+    },
+    {
+      "check": "title-is-claim",
+      "severity": "warn",
+      "card": "c7",
+      "block": null,
+      "message": "title is a noun phrase, not a claim: 'Columns nest inside columns, which the vocabulary forbids'",
+      "resolved": false
+    },
+    {
+      "check": "title-is-claim",
+      "severity": "warn",
+      "card": "c9",
+      "block": null,
+      "message": "title is a noun phrase, not a claim: 'One card carries five blocks and two charts at once'",
+      "resolved": false
+    },
+    {
+      "check": "title-is-claim",
+      "severity": "warn",
+      "card": "c1",
+      "block": null,
+      "message": "title is a noun phrase, not a claim: 'This card reuses an id that already exists'",
+      "resolved": false
+    },
+    {
+      "check": "answer-first",
+      "severity": "error",
+      "card": null,
+      "block": null,
+      "message": "no role:recommendation in the first 3 cards (found: nowhere)",
+      "resolved": false
+    },
+    {
+      "check": "card-count",
+      "severity": "error",
+      "card": null,
+      "block": null,
+      "message": "11 cards exceeds idea-pitch limit of 10 (appendix excluded)",
+      "resolved": false
+    },
+    {
+      "check": "title-length",
+      "severity": "warn",
+      "card": "c8",
+      "block": null,
+      "message": "title is 18 words (max 14)",
+      "resolved": false
+    },
+    {
+      "check": "one-message",
+      "severity": "warn",
+      "card": "c9",
+      "block": null,
+      "message": "5 blocks on one content card (max 4)",
+      "resolved": false
+    },
+    {
+      "check": "one-message",
+      "severity": "warn",
+      "card": "c9",
+      "block": null,
+      "message": "2 charts on one card (max 1)",
+      "resolved": false
+    },
+    {
+      "check": "evidence-present",
+      "severity": "warn",
+      "card": "c7",
+      "block": null,
+      "message": "no non-text block and no figure in title",
+      "resolved": false
+    },
+    {
+      "check": "evidence-present",
+      "severity": "warn",
+      "card": "c10",
+      "block": null,
+      "message": "no non-text block and no figure in title",
+      "resolved": false
+    },
+    {
+      "check": "evidence-present",
+      "severity": "warn",
+      "card": "c1",
+      "block": null,
+      "message": "no non-text block and no figure in title",
+      "resolved": false
+    },
+    {
+      "check": "chart-fit",
+      "severity": "warn",
+      "card": "c6",
+      "block": "c6b1",
+      "message": "pie with 6 slices; use bar",
+      "resolved": false
+    },
+    {
+      "check": "chart-fit",
+      "severity": "warn",
+      "card": "c9",
+      "block": "c9b1",
+      "message": "categorical comparison suits bar/hbar, not line",
+      "resolved": false
+    },
+    {
+      "check": "chart-fit",
+      "severity": "warn",
+      "card": "c9",
+      "block": "c9b2",
+      "message": "6 series exceed the 5 theme colours — fold into 'Other' or split the chart",
+      "resolved": false
+    },
+    {
+      "check": "overflow",
+      "severity": "error",
+      "card": "c9",
+      "block": null,
+      "message": "content ≈673pt exceeds 456pt even at the 11% ramp floor — split the card",
+      "resolved": false
+    }
+  ],
+  "inline_summary": [
+    "Malformed IR Probe · idea-pitch · slate · 11 cards · 0 revision passes",
+    "",
+    "Gate 1  schema         ✗",
+    "Gate 2  deterministic  ✗  14 errors · 13 warnings",
+    "Gate 3  judged         1.2 / 5   (lowest: storyline 1)",
+    "",
+    "!  1 concern raised — see report.md"
+  ],
+  "report_md": [
+    "# Malformed IR Probe — quality report",
+    "",
+    "idea-pitch · slate · 11 cards · 0 revision passes",
+    "",
+    "## 1 · Unverified inputs",
+    "",
+    "None — every chart, table and KPI is user-supplied or derived.",
+    "",
+    "## 2 · Errors",
+    "",
+    "- `c2` [schema-valid] — layout 'grid' not in ('title', 'section', 'content', 'hero')",
+    "- `c3` [schema-valid] — subtitle only valid on title/section layouts",
+    "- `c3/c3b1` [schema-valid] — unknown block type 'timeline'",
+    "- `c4` [schema-valid] — block missing id",
+    "- `c4/c4b2` [schema-valid] — callout tone 'danger' not in ('info', 'warn', 'good')",
+    "- `c4/c4b3` [schema-valid] — image src not found: figures/nowhere.png",
+    "- `c5/c5b1` [schema-valid] — table row 1 has 2 cells for 3 headers",
+    "- `c5/c5b2` [schema-valid] — series length mismatch with categories",
+    "- `c6/c6b1` [schema-valid] — pie values must be non-negative",
+    "- `c7/c7b3` [schema-valid] — columns may not nest inside columns",
+    "- `deck` [schema-valid] — duplicate id 'c1'",
+    "- `deck` [answer-first] — no role:recommendation in the first 3 cards (found: nowhere)",
+    "- `deck` [card-count] — 11 cards exceeds idea-pitch limit of 10 (appendix excluded)",
+    "- `c9` [overflow] — content ≈673pt exceeds 456pt even at the 11% ramp floor — split the card",
+    "",
+    "**14 unresolved — this deck must not ship.**",
+    "",
+    "## 3 · Warnings",
+    "",
+    "- `c5` [title-is-claim] — title is a noun phrase, not a claim: 'The table and the chart disagree with their own shape'",
+    "- `c7` [title-is-claim] — title is a noun phrase, not a claim: 'Columns nest inside columns, which the vocabulary forbids'",
+    "- `c9` [title-is-claim] — title is a noun phrase, not a claim: 'One card carries five blocks and two charts at once'",
+    "- `c1` [title-is-claim] — title is a noun phrase, not a claim: 'This card reuses an id that already exists'",
+    "- `c8` [title-length] — title is 18 words (max 14)",
+    "- `c9` [one-message] — 5 blocks on one content card (max 4)",
+    "- `c9` [one-message] — 2 charts on one card (max 1)",
+    "- `c7` [evidence-present] — no non-text block and no figure in title",
+    "- `c10` [evidence-present] — no non-text block and no figure in title",
+    "- `c1` [evidence-present] — no non-text block and no figure in title",
+    "- `c6/c6b1` [chart-fit] — pie with 6 slices; use bar",
+    "- `c9/c9b1` [chart-fit] — categorical comparison suits bar/hbar, not line",
+    "- `c9/c9b2` [chart-fit] — 6 series exceed the 5 theme colours — fold into 'Other' or split the chart",
+    "",
+    "## 4 · Concerns",
+    "",
+    "- `c9` — Even after the structural fixes, this card is two cards.",
+    "",
+    "Concerns are editorial judgment calls. They are never auto-fixed.",
+    "",
+    "## 5 · Tier-2 scorecard",
+    "",
+    "| Dimension | Score | Note |",
+    "|---|---|---|",
+    "| storyline | 1 | There is no argument here; the cards are probes. |",
+    "| verticalLogic | 1 | Titles describe defects rather than claims about a subject. |",
+    "| archetypeFit | 1 | Nothing about this resembles an idea pitch. |",
+    "| audienceFit | 1 | No audience exists for a malformed IR. |",
+    "| density | 2 | One card carries five blocks and two charts. |",
+    "",
+    "Mean **1.2 / 5**, lowest **1** — gate (mean ≥ 3.5, no dimension < 3): **FAIL**",
+    "",
+    "## 6 · Revision log",
+    "",
+    "No revision passes were needed.",
+    ""
+  ]
+}

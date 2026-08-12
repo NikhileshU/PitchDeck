@@ -1,0 +1,11 @@
+{
+  "name": "deck-builder",
+  "version": "1.0.0",
+  "description": "Turns a prompt into a presentation deck — HTML, PDF and native editable PPTX, plus a quality report. Claude authors only the IR (deck.json); two peer renderers read it independently, 14 deterministic checks and an LLM judge gate it, and every run emits a report naming any unverified placeholder data.",
+  "author": {
+    "name": "Nikhilesh Upreti",
+    "email": "nikhilesh.upreti01@gmail.com"
+  },
+  "repository": "https://github.com/NikhileshU/PitchDeck",
+  "keywords": ["deck", "presentation", "pptx", "slides", "pitch"]
+}

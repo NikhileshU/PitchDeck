@@ -1,0 +1,92 @@
+{
+  "schema": "1.0",
+  "meta": { "title": "Malformed IR Probe", "archetype": "idea-pitch",
+            "theme": "slate", "aspect": "16:9",
+            "_note": "Every structural Tier-1 check in one deck. schema-valid is the gate-1 check and was previously unexercised by the golden set (R10-M1/R11-H1): here it fires on an unknown layout, an unknown block type, a missing block id, a duplicate id, a subtitle on a content card, an invalid callout tone, a table row/header width mismatch, a chart series-length mismatch, a negative pie value, nested columns, and a missing image file. Also covers card-count (11 cards against the idea-pitch limit of 10), title-length, one-message, evidence-present and chart-fit. This fixture is not a deck anyone should render — it is the assertion that the gate still speaks." },
+  "cards": [
+    { "id": "c1", "layout": "title", "title": "Malformed IR Probe",
+      "subtitle": "Quality · August 2026", "role": null, "blocks": [], "notes": null },
+    { "id": "c2", "layout": "grid", "title": "This layout does not exist",
+      "role": null, "blocks": [], "notes": "Unknown layout — the card is skipped after this finding." },
+    { "id": "c3", "layout": "content", "title": "This card carries a subtitle it may not have",
+      "subtitle": "subtitles are title/section only", "role": null,
+      "blocks": [
+        { "id": "c3b1", "type": "timeline", "text": "no such block type" }
+      ],
+      "notes": "Unknown block type and a subtitle on a content layout." },
+    { "id": "c4", "layout": "content", "title": "Blocks here are missing what the schema requires",
+      "role": null,
+      "blocks": [
+        { "type": "text", "text": "This block has no id at all." },
+        { "id": "c4b2", "type": "callout", "tone": "danger", "text": "Tone 'danger' is not one of info/warn/good." },
+        { "id": "c4b3", "type": "image", "src": "figures/nowhere.png", "alt": "a file that does not exist" }
+      ],
+      "notes": "Missing id, invalid tone, unresolvable image src." },
+    { "id": "c5", "layout": "content", "title": "The table and the chart disagree with their own shape",
+      "role": null,
+      "blocks": [
+        { "id": "c5b1", "type": "table", "source": "user",
+          "headers": ["Option", "Cost", "Effort"],
+          "rows": [ ["Rebuild", "$400K", "2 quarters"],
+                    ["Migrate", "$120K"] ] },
+        { "id": "c5b2", "type": "chart", "chart": "bar", "source": "user",
+          "data": { "categories": ["A", "B", "C"],
+                    "series": [ { "name": "Short", "values": [1, 2] } ] } }
+      ],
+      "notes": "Row width mismatch and a series shorter than its categories." },
+    { "id": "c6", "layout": "content", "title": "The pie takes six slices and one of them is negative",
+      "role": null,
+      "blocks": [
+        { "id": "c6b1", "type": "chart", "chart": "pie", "source": "user",
+          "data": { "categories": ["A", "B", "C", "D", "E", "F"],
+                    "series": [ { "name": "Share", "values": [30, 25, 20, 15, 15, -5] } ] } }
+      ],
+      "notes": "Negative pie value (schema-valid) and six slices (chart-fit)." },
+    { "id": "c7", "layout": "content", "title": "Columns nest inside columns, which the vocabulary forbids",
+      "role": null,
+      "blocks": [
+        { "id": "c7b1", "type": "columns", "children": [
+            [ { "id": "c7b2", "type": "text", "text": "Left column." } ],
+            [ { "id": "c7b3", "type": "columns", "children": [
+                  [ { "id": "c7b4", "type": "text", "text": "Nested left." } ],
+                  [ { "id": "c7b5", "type": "text", "text": "Nested right." } ] ] } ]
+          ] }
+      ],
+      "notes": "One level of nesting is the whole allowance." },
+    { "id": "c8", "layout": "content",
+      "title": "This title runs on well past the fourteen word ceiling that the length check is there to enforce",
+      "role": null,
+      "blocks": [
+        { "id": "c8b1", "type": "kpi", "value": "14", "label": "words, maximum", "source": "derived" }
+      ],
+      "notes": "title-length." },
+    { "id": "c9", "layout": "content", "title": "One card carries five blocks and two charts at once",
+      "role": null,
+      "blocks": [
+        { "id": "c9b1", "type": "chart", "chart": "line", "source": "user",
+          "data": { "categories": ["North", "South", "East"],
+                    "series": [ { "name": "Region", "values": [3, 5, 4] } ] } },
+        { "id": "c9b2", "type": "chart", "chart": "bar", "source": "user",
+          "data": { "categories": ["A", "B"],
+                    "series": [ { "name": "S1", "values": [1, 2] }, { "name": "S2", "values": [2, 3] },
+                                { "name": "S3", "values": [3, 4] }, { "name": "S4", "values": [4, 5] },
+                                { "name": "S5", "values": [5, 6] }, { "name": "S6", "values": [6, 7] } ] } },
+        { "id": "c9b3", "type": "text", "text": "Third block." },
+        { "id": "c9b4", "type": "text", "text": "Fourth block." },
+        { "id": "c9b5", "type": "text", "text": "Fifth block." }
+      ],
+      "notes": "one-message on both counts; chart-fit on the line and on six series." },
+    { "id": "c10", "layout": "content", "title": "Nothing on this card proves anything at all",
+      "role": null,
+      "blocks": [
+        { "id": "c10b1", "type": "text", "text": "Text only, and no figure in the title." }
+      ],
+      "notes": "evidence-present." },
+    { "id": "c1", "layout": "content", "title": "This card reuses an id that already exists",
+      "role": null,
+      "blocks": [
+        { "id": "c11b1", "type": "text", "text": "Duplicate card id, and one card past the idea-pitch limit." }
+      ],
+      "notes": "schema-valid duplicate id, and the eleventh card against a limit of ten." }
+  ]
+}

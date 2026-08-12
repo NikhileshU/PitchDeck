@@ -12,7 +12,7 @@ Single-user Claude plugin that turns a prompt into a presentation deck: HTML, PD
 
 ---
 
-## CURRENT PHASE: 12
+## CURRENT PHASE: 12 — complete. All 13 phases (0–12) are done.
 
 Update this line at the end of every session.
 
@@ -96,7 +96,7 @@ skills/build-deck/{SKILL.md,references/}
 skills/review-deck/SKILL.md
 themes/{base.css,slate.json,warm.json,mono.json}
 scripts/{render_html,render_pptx,export_pdf,validate,report}.py
-evals/golden/{01..07}-*.json,judges/,expected/
+evals/golden/{01..09}-*.json,judges/,themes/,runs.json,expected/
 evals/run_golden.py                    test harness, not a shipped script
 ```
 

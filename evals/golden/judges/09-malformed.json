@@ -1,0 +1,12 @@
+{
+  "scores": {
+    "storyline": { "score": 1, "note": "There is no argument here; the cards are probes." },
+    "verticalLogic": { "score": 1, "note": "Titles describe defects rather than claims about a subject." },
+    "archetypeFit": { "score": 1, "note": "Nothing about this resembles an idea pitch." },
+    "audienceFit": { "score": 1, "note": "No audience exists for a malformed IR." },
+    "density": { "score": 2, "note": "One card carries five blocks and two charts." }
+  },
+  "concerns": [
+    { "card": "c9", "message": "Even after the structural fixes, this card is two cards." }
+  ]
+}

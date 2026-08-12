@@ -10,7 +10,7 @@ NOTE on archetypes: spec §10 mandates archetype-conditional checks here
 below — and nowhere else in scripts/. Renderers never see them (invariant 6).
 """
 
-import argparse, json, math, re, sys
+import argparse, itertools, json, math, re, sys
 from pathlib import Path
 
 LAYOUTS = ("title", "section", "content", "hero")
@@ -421,10 +421,17 @@ def check_contrast(theme):
         f.append(F("contrast", "warn", f"accent on bg is {r:.2f}:1 (large-text floor is 3:1)"))
     series = [v for i, v in enumerate(c.get("series") or []) if f"series[{i}]" not in bad]
     rgb = lambda h: tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
-    for a, b in zip(series, series[1:]):
+    # every pair, not just neighbours: series 1 and 4 sit side by side in any
+    # 4-series chart, so adjacency in the array says nothing about the legend
+    for a, b in itertools.combinations(series, 2):
         d = sum((x - y) ** 2 for x, y in zip(rgb(a), rgb(b))) ** 0.5
         if d < 60:
-            f.append(F("contrast", "warn", f"adjacent series colours {a}/{b} are hard to distinguish"))
+            f.append(F("contrast", "warn", f"series colours {a}/{b} are hard to distinguish"))
+    if ok("surface"):
+        for i, v in enumerate(series):
+            if (r := _ratio(v, c["surface"])) < 3.0:
+                f.append(F("contrast", "warn", f"series[{i}] {v} is {r:.2f}:1 on surface "
+                                               "(large-object floor is 3:1)"))
     return f
 
 

@@ -1,0 +1,9 @@
+{
+  "_note": "Per-fixture run context, so the golden set can pin report.md sections that a single validate.py pass cannot produce. `passes` is the revision count recorded into findings.json. `resolved` holds `check` or `check:severity` selectors whose findings are marked resolved:true, simulating the build-deck revise loop — validate.py never emits a resolved finding, so without this the revision branch of report.md section 6 and the '*(resolved by revision)*' finding suffix stay unpinned (R10-L3). Fixtures absent from this file run at passes 0 with nothing resolved.",
+
+  "05-placeholder-data.json": {
+    "passes": 2,
+    "resolved": ["data-provenance:error"],
+    "why": "Simulates a deck that reached pass 2 with the missing chart and KPI sources added; the unverified placeholder table survived the revision, as placeholders always do."
+  }
+}

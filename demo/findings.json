@@ -1,0 +1,46 @@
+{
+  "deck": "Analytics Consolidation Decision",
+  "passes": 0,
+  "findings": [
+    {
+      "check": "data-provenance",
+      "severity": "unverified",
+      "card": "c2",
+      "block": "c2b1",
+      "message": "kpi uses placeholder data",
+      "resolved": false
+    },
+    {
+      "check": "data-provenance",
+      "severity": "unverified",
+      "card": "c3",
+      "block": "c3b1",
+      "message": "chart uses placeholder data",
+      "resolved": false
+    },
+    {
+      "check": "data-provenance",
+      "severity": "unverified",
+      "card": "c4",
+      "block": "c4b1",
+      "message": "chart uses placeholder data",
+      "resolved": false
+    },
+    {
+      "check": "data-provenance",
+      "severity": "unverified",
+      "card": "c5",
+      "block": "c5b1",
+      "message": "kpi uses placeholder data",
+      "resolved": false
+    },
+    {
+      "check": "data-provenance",
+      "severity": "unverified",
+      "card": "c6",
+      "block": "c6b1",
+      "message": "table uses placeholder data",
+      "resolved": false
+    }
+  ]
+}

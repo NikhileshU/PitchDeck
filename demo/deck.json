@@ -1,0 +1,102 @@
+{
+  "schema": "1.0",
+  "meta": {
+    "title": "Analytics Consolidation Decision",
+    "archetype": "business-stakeholder",
+    "theme": "slate",
+    "aspect": "16:9"
+  },
+  "cards": [
+    { "id": "c1", "layout": "title", "title": "Analytics Consolidation Decision",
+      "subtitle": "Platform Engineering · August 2026", "role": null, "blocks": [], "notes": null },
+
+    { "id": "c2", "layout": "content",
+      "title": "Approve the $180K Metrio contract to replace three analytics tools",
+      "role": "recommendation",
+      "blocks": [
+        { "id": "c2b1", "type": "kpi", "value": "$108K",
+          "label": "net annual saving after consolidation",
+          "delta": "breakeven in month 8", "source": "placeholder" },
+        { "id": "c2b2", "type": "callout", "tone": "info",
+          "text": "Two incumbent renewals auto-execute September 30 — the decision window is now." }
+      ],
+      "notes": "One sentence, then stop: we spend 288 on three tools, Metrio does it for 180. Payback math is on c5 if challenged." },
+
+    { "id": "c3", "layout": "content",
+      "title": "Analytics spend hits $288K across three overlapping tools",
+      "role": "problem",
+      "blocks": [
+        { "id": "c3b1", "type": "chart", "chart": "bar", "source": "placeholder",
+          "caption": "Annual contract cost by tool (US$K)",
+          "data": { "categories": ["Dashly", "Chartio", "Plotdeck"],
+                    "series": [ { "name": "Annual cost", "values": [132, 96, 60] } ] } },
+        { "id": "c3b2", "type": "callout", "tone": "warn",
+          "text": "All three contracts renewed last year without a consolidation review." }
+      ],
+      "notes": "Do not itemise features here — the point is three bills for one job." },
+
+    { "id": "c4", "layout": "content",
+      "title": "Six teams pay twice for the same dashboards",
+      "role": null,
+      "blocks": [
+        { "id": "c4b1", "type": "chart", "chart": "hbar", "source": "placeholder",
+          "caption": "Seats duplicated across two or more tools, by team",
+          "data": { "categories": ["Growth", "Core Product", "Data", "Support"],
+                    "series": [ { "name": "Duplicated seats", "values": [34, 28, 22, 9] } ] } },
+        { "id": "c4b2", "type": "callout", "tone": "warn",
+          "text": "Every new hire in these teams adds two licences by default." }
+      ],
+      "notes": "If asked why duplication happened: dashboard migration debt, not negligence. Keep it forward-looking." },
+
+    { "id": "c5", "layout": "content",
+      "title": "Metrio delivers 92% of current usage at 63% of the cost",
+      "role": "solution",
+      "blocks": [
+        { "id": "c5b1", "type": "kpi", "value": "92%",
+          "label": "of tracked dashboard usage covered by Metrio",
+          "delta": "from 6 months of usage logs", "source": "placeholder" },
+        { "id": "c5b2", "type": "bullets", "items": [
+            "The uncovered 8% is legacy exports two teams already plan to retire",
+            "$180K flat contract replaces $288K across three renewals",
+            "Migration runs inside Q4 with no new headcount" ] }
+      ],
+      "notes": "The 92% comes from usage-log analysis — offer the appendix detail if the number is challenged." },
+
+    { "id": "c6", "layout": "content",
+      "title": "Two alternatives fall short on SSO and data residency",
+      "role": null,
+      "blocks": [
+        { "id": "c6b1", "type": "table", "source": "placeholder",
+          "headers": ["Criterion", "Metrio", "Kepler BI", "Graphline"],
+          "rows": [
+            ["SAML SSO included", "Yes", "Enterprise tier only", "Yes"],
+            ["EU data residency", "Yes", "Yes", "No"],
+            ["Annual cost (like-for-like)", "$180K", "$214K", "$168K"],
+            ["Usage coverage", "92%", "88%", "71%"] ] }
+      ],
+      "notes": "Graphline is cheaper but fails residency outright — that is the one-line answer if price comes up." },
+
+    { "id": "c7", "layout": "content",
+      "title": "We need signatures before the September 30 renewal deadlines",
+      "role": "ask",
+      "blocks": [
+        { "id": "c7b1", "type": "callout", "tone": "info",
+          "text": "Dashly and Chartio renew automatically Sept 30; cancellation needs 30 days' notice." },
+        { "id": "c7b2", "type": "text",
+          "text": "Signing by September 1 avoids a full year of double payment on two of the three tools. The ask: approve the Metrio contract and authorise the two cancellations." }
+      ],
+      "notes": "Close on the single decision. If the room stalls, the fallback is cancelling Plotdeck alone — but say clearly that saves only $60K." },
+
+    { "id": "c8", "layout": "content",
+      "title": "Migration runs eight weeks with the existing team",
+      "role": "appendix",
+      "blocks": [
+        { "id": "c8b1", "type": "bullets", "items": [
+            "Weeks 1–2: SSO, workspace setup, top-20 dashboards rebuilt",
+            "Weeks 3–6: team-by-team migration, old tools read-only",
+            "Weeks 7–8: legacy export retirement and cancellation notices",
+            "Rollback point: end of week 4, before read-only cutover" ] }
+      ],
+      "notes": "Appendix — only walk through this if asked about execution risk." }
+  ]
+}

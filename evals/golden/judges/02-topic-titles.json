@@ -1,0 +1,12 @@
+{
+  "scores": {
+    "storyline": { "score": 2, "note": "Titles read as an agenda, not an argument — nothing carries forward." },
+    "verticalLogic": { "score": 2, "note": "Labels above evidence; the reader has to derive the point themselves." },
+    "archetypeFit": { "score": 3, "note": "The material is decision material; the framing is not." },
+    "audienceFit": { "score": 3, "note": "An executive skimming titles alone would leave with nothing." },
+    "density": { "score": 4, "note": "Cards are not crowded." }
+  },
+  "concerns": [
+    { "card": "c2", "message": "Rewriting titles as claims will likely reorder the deck — the argument does not exist yet." }
+  ]
+}

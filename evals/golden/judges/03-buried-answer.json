@@ -1,0 +1,13 @@
+{
+  "scores": {
+    "storyline": { "score": 2, "note": "Eight cards of build-up before the recommendation lands." },
+    "verticalLogic": { "score": 4, "note": "Individual cards hold up; the sequence does not." },
+    "archetypeFit": { "score": 2, "note": "Business-stakeholder decks answer first; this one withholds." },
+    "audienceFit": { "score": 3, "note": "An executive who leaves at minute ten never hears the ask." },
+    "density": { "score": 4, "note": "Comfortable throughout." }
+  },
+  "concerns": [
+    { "card": "c9", "message": "Moving the recommendation to card 2 leaves cards 3–8 without an obvious purpose." },
+    { "card": "c5", "message": "The section divider currently separates evidence from the answer — it may not survive the reorder." }
+  ]
+}

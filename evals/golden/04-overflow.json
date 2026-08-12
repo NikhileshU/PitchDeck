@@ -2,6 +2,7 @@
   "schema": "1.0",
   "meta": { "title": "Q3 Everything Review", "archetype": "business-stakeholder",
             "theme": "slate", "aspect": "16:9" },
+  "_note": "Three overflow paths in one fixture: c2 overflows by block count, c3 by a single ~400-word text block (R9-N7), and c4 sits just under the limit at ~99% fill — the calibration lock for the estimator constants above 95% (R3-S3). If a change to _block_h or the theme metrics moves c4 across the line, the golden diff fires.",
   "cards": [
     { "id": "c1", "layout": "title", "title": "Q3 Everything Review",
       "subtitle": "Commercial Ops · August 2026", "role": null, "blocks": [], "notes": null },
@@ -28,9 +29,33 @@
           "text": "Dual-sourcing closes the gap by January and pays back within two quarters." }
       ],
       "notes": "This card must be split — chart, six-row table, callout and text cannot fit." },
-    { "id": "c3", "layout": "content", "title": "The fix pays back within two quarters",
+    { "id": "c3", "layout": "content",
+      "title": "A single 400-word block cannot fit one card",
       "role": null,
-      "blocks": [ { "id": "c3b1", "type": "kpi", "value": "2.1x",
+      "blocks": [
+        { "id": "c3b1", "type": "text",
+          "text": "The APAC shortfall began in the second week of July, when Hanwei notified us that its chip allocation for the quarter had been cut by roughly a third without warning. We absorbed the first three weeks out of finished-goods inventory, which is why the July numbers looked healthy and why nobody escalated until the middle of August. By then the buffer was gone and the shortfall passed straight through to shipped revenue. Sunmoto followed two weeks later with a smaller cut traced to the same upstream fab, so the two misses are not independent events and should not be modelled as though they were. Delta-P, our smallest APAC supplier, delivered slightly above commitment throughout, which is the single most useful fact in this review: it holds a separate allocation at a second fab and was never exposed to the shortfall at all. That is the template for the fix. Qualifying Delta-P for the two constrained SKUs takes roughly eleven weeks, of which six are a parallel production run we cannot compress without accepting quality risk we have not accepted before. The tooling is the smaller cost and the slower constraint is calendar time, not money. If we approve in August, first qualified volume lands in November and full replacement volume in January, which closes the gap in the same quarter that demand peaks. If we approve in September, everything moves a quarter to the right and we spend Q1 explaining the same chart again. The commercial consequence is straightforward. Every week of delay costs about four hundred thousand dollars of deferred revenue, none of which is recoverable later in the year because the demand is tied to installation windows that close in February. The forecasting question that has dominated the last two review meetings is a distraction: demand was accurate to within two percent in every region including APAC, and the entire variance is supply. Treating this as a forecasting problem would send us into another cycle of model revisions while the actual constraint goes unaddressed for another quarter, and the January crossover disappears. The decision in front of the committee is therefore narrow and time-boxed: approve the one-point-two million dollars this month, or accept a March crossover and the revenue that goes with it. Everything else in this pack is evidence for that one choice, and none of it changes the shape of the choice itself." }
+      ],
+      "notes": "R9-N7: a single ~400-word text block must surface as overflow, not shrink to fit." },
+    { "id": "c4", "layout": "content",
+      "title": "This card sits just under the ceiling",
+      "role": null,
+      "blocks": [
+        { "id": "c4b1", "type": "chart", "chart": "bar", "source": "user",
+          "caption": "Committed vs delivered units by supplier, Q3 (K units)",
+          "data": { "categories": ["Hanwei", "Sunmoto", "Delta-P"],
+                    "series": [ { "name": "Committed", "values": [120, 90, 60] },
+                                { "name": "Delivered", "values": [84, 71, 61] } ] } },
+        { "id": "c4b2", "type": "bullets", "items": [
+            "Hanwei and Sunmoto share one upstream fab allocation",
+            "Delta-P holds a second allocation and never missed",
+            "Recovery dates are the suppliers' own, not our estimates",
+            "No commitment covers the two constrained SKUs today" ] }
+      ],
+      "notes": "R3-S3 calibration lock: ~99% fill must pass. Moving this over the line is a regression." },
+    { "id": "c5", "layout": "content", "title": "The fix pays back within two quarters",
+      "role": null,
+      "blocks": [ { "id": "c5b1", "type": "kpi", "value": "2.1x",
                     "label": "12-month return on the $1.2M", "source": "derived" } ],
       "notes": "Payback." }
   ]

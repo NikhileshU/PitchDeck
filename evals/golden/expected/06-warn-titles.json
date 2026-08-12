@@ -1,0 +1,98 @@
+{
+  "fixture": "06-warn-titles.json",
+  "theme": "slate",
+  "exit": 0,
+  "counts": {
+    "warn": 3,
+    "info": 1
+  },
+  "findings": [
+    {
+      "check": "title-is-claim",
+      "severity": "warn",
+      "card": "c2",
+      "block": null,
+      "message": "title is a noun phrase, not a claim: 'Competitive Landscape and Market Review'",
+      "resolved": false
+    },
+    {
+      "check": "title-is-claim",
+      "severity": "warn",
+      "card": "c3",
+      "block": null,
+      "message": "title is a noun phrase, not a claim: 'Unit Economics Deep Dive'",
+      "resolved": false
+    },
+    {
+      "check": "title-is-claim",
+      "severity": "warn",
+      "card": "c4",
+      "block": null,
+      "message": "title is a noun phrase, not a claim: 'Roadmap Sequencing and Scope Options'",
+      "resolved": false
+    },
+    {
+      "check": "notes-present",
+      "severity": "info",
+      "card": "c4",
+      "block": null,
+      "message": "content card has no speaker notes",
+      "resolved": false
+    }
+  ],
+  "inline_summary": [
+    "Platform Review · product-demo · slate · 4 cards · 0 revision passes",
+    "",
+    "Gate 1  schema         ✓",
+    "Gate 2  deterministic  ✓  0 errors · 3 warnings",
+    "Gate 3  judged         3.8 / 5   (lowest: storyline 3)",
+    "",
+    "!  1 concern raised — see report.md"
+  ],
+  "report_md": [
+    "# Platform Review — quality report",
+    "",
+    "product-demo · slate · 4 cards · 0 revision passes",
+    "",
+    "## 1 · Unverified inputs",
+    "",
+    "None — every chart, table and KPI is user-supplied or derived.",
+    "",
+    "## 2 · Errors",
+    "",
+    "None.",
+    "",
+    "## 3 · Warnings",
+    "",
+    "- `c2` [title-is-claim] — title is a noun phrase, not a claim: 'Competitive Landscape and Market Review'",
+    "- `c3` [title-is-claim] — title is a noun phrase, not a claim: 'Unit Economics Deep Dive'",
+    "- `c4` [title-is-claim] — title is a noun phrase, not a claim: 'Roadmap Sequencing and Scope Options'",
+    "",
+    "Also noted (info):",
+    "",
+    "- `c4` [notes-present] — content card has no speaker notes",
+    "",
+    "## 4 · Concerns",
+    "",
+    "- `c3` — The strongest proof point sits behind the weakest title in the deck.",
+    "",
+    "Concerns are editorial judgment calls. They are never auto-fixed.",
+    "",
+    "## 5 · Tier-2 scorecard",
+    "",
+    "| Dimension | Score | Note |",
+    "|---|---|---|",
+    "| storyline | 3 | The demo flows, but several titles describe the screen instead of the point. |",
+    "| verticalLogic | 3 | Noun-phrase titles leave the claim to the presenter's voice. |",
+    "| archetypeFit | 4 | Product-demo shape: capability, proof, adoption. |",
+    "| audienceFit | 4 | Pitched at users, not buyers, which matches the room. |",
+    "| density | 5 | One idea a card throughout. |",
+    "",
+    "Mean **3.8 / 5**, lowest **3** — gate (mean ≥ 3.5, no dimension < 3): **PASS**",
+    "",
+    "## 6 · Revision log",
+    "",
+    "No revision passes were needed.",
+    ""
+  ]
+}

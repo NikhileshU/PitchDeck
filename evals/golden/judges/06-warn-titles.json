@@ -1,0 +1,12 @@
+{
+  "scores": {
+    "storyline": { "score": 3, "note": "The demo flows, but several titles describe the screen instead of the point." },
+    "verticalLogic": { "score": 3, "note": "Noun-phrase titles leave the claim to the presenter's voice." },
+    "archetypeFit": { "score": 4, "note": "Product-demo shape: capability, proof, adoption." },
+    "audienceFit": { "score": 4, "note": "Pitched at users, not buyers, which matches the room." },
+    "density": { "score": 5, "note": "One idea a card throughout." }
+  },
+  "concerns": [
+    { "card": "c3", "message": "The strongest proof point sits behind the weakest title in the deck." }
+  ]
+}

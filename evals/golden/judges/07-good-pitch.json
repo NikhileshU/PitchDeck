@@ -1,0 +1,10 @@
+{
+  "scores": {
+    "storyline": { "score": 5, "note": "Problem, product, proof, market, traction, economics, ask — no detour." },
+    "verticalLogic": { "score": 4, "note": "Each title states the number the card then shows." },
+    "archetypeFit": { "score": 5, "note": "Nine cards, traction before market, an ask tied to a milestone." },
+    "audienceFit": { "score": 4, "note": "Seed investors get the numbers they screen on; the compliance detail is thin." },
+    "density": { "score": 4, "note": "At most two blocks a card." }
+  },
+  "concerns": []
+}

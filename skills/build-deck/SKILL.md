@@ -21,7 +21,9 @@ Establish, asking only when genuinely unclear:
 - **Data**: what the user supplied. Numbers they give are `source: "user"`;
   numbers you compute from theirs are `"derived"`; structure-only values you
   invent are `"placeholder"` — and marking them is mandatory, not optional.
-- **Theme**: `slate` unless they choose `warm` or `mono`.
+- **Theme**: `slate`. (`warm` and `mono` ship in a later phase — if the requested
+  theme has no file in `${CLAUDE_PLUGIN_ROOT}/themes/`, fall back to `slate` and
+  say so rather than failing.)
 
 ## 2 · Load the contracts
 

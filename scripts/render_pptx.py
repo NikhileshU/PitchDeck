@@ -98,15 +98,23 @@ def _b_kpi(shapes, b, st, theme, x, y, w, h, name, scale=1.0):
         _para(tf, b["delta"], sc["caption"], st["muted"], st)
 
 def _b_chart(shapes, b, st, theme, x, y, w, h, name):
+    cats, series = b["data"].get("categories"), b["data"].get("series")
+    if not cats or not series:  # parity with render_html: fail loudly, never a blank frame
+        raise ValueError("chart needs at least one category and one series")
     data = CategoryChartData()
-    data.categories = [str(c) for c in b["data"]["categories"]]
-    for s in b["data"]["series"]:
+    data.categories = [str(c) for c in cats]
+    for s in series:
+        if not all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                   for v in s.get("values") or []):
+            raise ValueError(f"series {s.get('name')!r} has non-numeric values")
         data.add_series(str(s["name"]), tuple(float(v) for v in s["values"]))
-    gf = shapes.add_chart(CHART_KIND[b["chart"]], Pt(x), Pt(y), Pt(w), Pt(240), data)
+    # chart box = model height minus the caption strip — follows _block_h wherever it moves
+    cap_h = st["sc"]["caption"] * st["lh"] + st["gap"] / 2 if b.get("caption") else 0
+    gf = shapes.add_chart(CHART_KIND[b["chart"]], Pt(x), Pt(y), Pt(w), Pt(h - cap_h), data)
     gf.name = name
     ch = gf.chart
     ch.has_title = False
-    nseries = len(b["data"]["series"])
+    nseries = len(series)
     if b["chart"] == "pie":
         for i, pt in enumerate(ch.plots[0].series[0].points):
             pt.format.fill.solid()
@@ -134,7 +142,8 @@ def _b_chart(shapes, b, st, theme, x, y, w, h, name):
         except (ValueError, AttributeError):
             pass  # pie has no axes
     if b.get("caption"):
-        _, tf = _frame(shapes, x, y + 240 + st["gap"] / 2, w, st["sc"]["caption"] * st["lh"])
+        _, tf = _frame(shapes, x, y + (h - cap_h) + st["gap"] / 2, w,
+                       st["sc"]["caption"] * st["lh"])
         _para(tf, b["caption"], st["sc"]["caption"], st["muted"], st)
 
 def _b_table(shapes, b, st, theme, x, y, w, h, name):
@@ -190,6 +199,12 @@ def _b_image(shapes, b, st, theme, x, y, w, h, name):
 
 def _b_columns(shapes, b, st, theme, x, y, w, h, name):
     cols = b["children"]
+    if any(cb.get("type") == "columns" for col in cols for cb in col):
+        raise ValueError("columns may not nest inside columns")
+    # invisible geometry marker so peer-agreement checks can locate this block
+    tb = shapes.add_textbox(Pt(x), Pt(y), Pt(w), Pt(0.5))
+    tb.name = name
+    _setup_tf(tb.text_frame)
     cw = (w - (len(cols) - 1) * st["gap"]) / len(cols)
     for ci, col in enumerate(cols):
         cy = y

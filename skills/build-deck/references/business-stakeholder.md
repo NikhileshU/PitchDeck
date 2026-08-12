@@ -49,8 +49,14 @@ read in order must *be* the argument (the judge's `storyline` dimension).
 | Supply Chain Update | Two of three APAC suppliers missed committed volumes |
 | Next Steps | We need sign-off before the August 29 vendor deadline |
 
-Short label titles (≤3 words, no figure, no verb) are a Tier-1 **error**; longer
+Short label titles are a Tier-1 **error** when all three hold: **≤3 alphabetic
+tokens** (not words — `"Top 3 Growth Levers"` is 4 words but 3 tokens, since a
+lone digit is not a token), **no strong figure** (two digits, a `%`, currency, or
+a decimal — a bare `3` or `Q4` does not count), and **no verb token**. Longer
 noun phrases draw a warn and cost `storyline`/`verticalLogic` points at the judge.
+
+**Write to the claim standard, not to the checker's boundary.** A title that
+squeaks past the error rule is still a label; the judge scores it down anyway.
 
 ---
 

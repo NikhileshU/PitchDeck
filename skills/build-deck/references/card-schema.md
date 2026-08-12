@@ -144,8 +144,11 @@ The renderers are peers, but they must agree on *where things go*:
    with a `kpi` or title only centers vertically like `title`/`section`.
 5. **Peer agreement is checkpointed** (spec §14, phase 9): `all-blocks.json`
    through both renderers — same block order, same top edge.
-6. **No auto-fit, ever.** `render_pptx.py` sets `text_frame.auto_size = None`
-   and `text_frame.vertical_anchor = MSO_ANCHOR.TOP` on every frame it creates.
+6. **No auto-fit, ever.** `render_pptx.py` sets
+   `text_frame.auto_size = MSO_AUTO_SIZE.NONE` — the explicit `<a:noAutofit/>`
+   flag; python-pptx's literal `None` *removes* the element and means "inherit",
+   the opposite of the intent — and `text_frame.vertical_anchor = MSO_ANCHOR.TOP`
+   on every frame it creates, including table cells and autoshapes' implicit frames.
    PowerPoint's default shrink-to-fit would absorb overflow that §5 requires to
    surface as a Tier-1 error — a deck that validates clean must not silently
    render at reduced type.

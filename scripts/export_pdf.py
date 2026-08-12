@@ -38,7 +38,7 @@ def find_browser(override=None):
     return None
 
 
-def export(html_path, out_path, browser, no_sandbox=False):
+def export(html_path, out_path, browser, no_sandbox=False, cards=None):
     html_uri = Path(html_path).resolve().as_uri()
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -63,12 +63,17 @@ def export(html_path, out_path, browser, no_sandbox=False):
     raw = out.read_bytes()
     if raw[:5] != b"%PDF-":
         raise RuntimeError(f"{out} is not a PDF")
-    # one card must equal one page — a mismatch means clipping or pagination fault
-    cards = Path(html_path).read_text(encoding="utf-8").count('class="card ')
+    # Pagination gate only: one card = one page. This does NOT detect card
+    # overflow (a fixed-height card paints past its box without adding pages);
+    # validate.py's estimator is the overflow detector.
+    if cards is None:  # fallback: count renderer markup
+        cards = Path(html_path).read_text(encoding="utf-8").count('class="card ')
     pages = len(re.findall(rb"/Type\s*/Page[^s]", raw))
-    if cards and pages != cards:
-        raise RuntimeError(f"PDF has {pages} pages for {cards} cards — "
-                           "content overflowed the page or pagination broke")
+    if pages == 0:  # pages likely inside compressed object streams — unknown, not a mismatch
+        print("export_pdf: warning: page count unreadable; pagination gate skipped",
+              file=sys.stderr)
+    elif cards and pages != cards:
+        raise RuntimeError(f"PDF has {pages} pages for {cards} cards — pagination broke")
     if proc.returncode != 0:
         print(f"export_pdf: warning: browser exited {proc.returncode} after writing "
               f"the PDF:\n{proc.stderr[-1000:]}", file=sys.stderr)
@@ -82,6 +87,8 @@ def main(argv=None):
                     help="path to a Chromium-family binary (autodetected if omitted)")
     ap.add_argument("--no-sandbox", action="store_true",
                     help="pass --no-sandbox to the browser (container runtimes)")
+    ap.add_argument("--cards", type=int, default=None,
+                    help="expected page count (from the IR); falls back to counting markup")
     args = ap.parse_args(argv)
 
     if not Path(args.html).exists():
@@ -96,7 +103,7 @@ def main(argv=None):
         return 1
 
     try:
-        export(args.html, args.out, browser, no_sandbox=args.no_sandbox)
+        export(args.html, args.out, browser, no_sandbox=args.no_sandbox, cards=args.cards)
     except (RuntimeError, FileNotFoundError, subprocess.TimeoutExpired) as e:
         print(f"export_pdf: {e}", file=sys.stderr)
         return 1

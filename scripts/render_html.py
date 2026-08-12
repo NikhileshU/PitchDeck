@@ -58,6 +58,7 @@ def _css_vars(theme):
 # ---- charts: inline SVG ----------------------------------------------------
 
 def _legend(series, fs, nc, W):
+    # returns (svg, rows); truncation is loud — a "+N more" marker, never silent
     x, y, sw, parts = 0.0, 0.0, fs * 0.75, []
     for j, s in enumerate(series):
         name = _trunc(s["name"], 18)
@@ -65,13 +66,15 @@ def _legend(series, fs, nc, W):
         if x > 0 and x + w_item > W:  # wrap; cap at two rows
             x, y = 0.0, y + fs * 1.4
             if y > fs * 1.5:
+                parts.append(f'<text x="0" y="{y + fs * 0.6:.1f}" '
+                             f'fill="var(--color-muted)">+{len(series) - j} more</text>')
                 break
         parts.append(f'<rect x="{x:.1f}" y="{y + fs * 0.3:.1f}" width="{sw:.1f}" '
                      f'height="{sw:.1f}" rx="2" fill="{_ser(j, nc)}"/>')
         parts.append(f'<text x="{x + sw + fs * 0.45:.1f}" y="{y + fs:.1f}" '
                      f'fill="var(--color-muted)">{_e(name)}</text>')
         x += w_item
-    return "".join(parts)
+    return "".join(parts), round(y / (fs * 1.4)) + 1
 
 def _axis(x1, y1, x2, y2):
     return (f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
@@ -99,16 +102,15 @@ def _chart_bar(cats, series, W, H, fs, nc):
     hi, lo = max(vals + [0.0]), min(vals + [0.0])
     if hi == lo:
         hi = 1.0
+    leg, lrows = _legend(series, fs, nc, W) if m > 1 else ("", 0)
     # below-baseline labels need room above the category-label row
-    top, bot = fs * (2.6 if m > 1 else 1.6), H - fs * (2.6 if lo < 0 else 1.5)
-
-    def Y(v):
-        return top + (hi - v) / (hi - lo) * (bot - top)
-
+    top = fs * (2.6 if m > 1 else 1.6) + max(0, lrows - 1) * fs * 1.5
+    bot = H - fs * (2.6 if lo < 0 else 1.5)
+    Y = lambda v: top + (hi - v) / (hi - lo) * (bot - top)
     y0, gw, gap = Y(0), W / n, 2.0
     bw = min((gw * 0.62 - gap * (m - 1)) / m, fs * 3.2)
     label_all = m * n <= 8
-    out = [_legend(series, fs, nc, W)] if m > 1 else []
+    out = [leg] if leg else []
     for i, cat in enumerate(cats):
         x0 = i * gw + (gw - (bw * m + gap * (m - 1))) / 2
         out.append(f'<text x="{i * gw + gw / 2:.1f}" y="{H - fs * 0.35:.1f}" '
@@ -131,18 +133,16 @@ def _chart_hbar(cats, series, W, H, fs, nc):
     hi, lo = max(vals + [0.0]), min(vals + [0.0])
     if hi == lo:
         hi = 1.0
-    top = fs * 1.8 if m > 1 else fs * 0.4
+    leg, lrows = _legend(series, fs, nc, W) if m > 1 else ("", 0)
+    top = (fs * 1.8 if m > 1 else fs * 0.4) + max(0, lrows - 1) * fs * 1.5
     lw = min(W * 0.3, max(len(str(c)) for c in cats) * fs * 0.62 + fs * 0.8)
     pw, ah = W - lw - fs * 3.2, H - top - fs * 0.4
-
-    def X(v):
-        return lw + (v - lo) / (hi - lo) * pw
-
+    X = lambda v: lw + (v - lo) / (hi - lo) * pw
     x0, rh = X(0), ah / n
     bh = min((rh * 0.62 - 2 * (m - 1)) / m, fs * 1.5)
     label_all = m * n <= 12
     maxch = max(2, int(lw / (fs * 0.62)) - 1)
-    out = [_legend(series, fs, nc, W)] if m > 1 else []
+    out = [leg] if leg else []
     for i, cat in enumerate(cats):
         yc = top + i * rh + rh / 2
         y0 = yc - (bh * m + 2 * (m - 1)) / 2
@@ -171,18 +171,15 @@ def _chart_line(cats, series, W, H, fs, nc):
     else:  # lines need no zero baseline, but never pad a non-negative domain below 0
         pad = (hi - lo) * 0.25
         lo = lo - pad if lo < 0 else max(0.0, lo - pad)
-    top = fs * (2.2 if m > 1 else 1.2)
+    leg, lrows = _legend(series, fs, nc, W) if m > 1 else ("", 0)
+    top = fs * (2.2 if m > 1 else 1.2) + max(0, lrows - 1) * fs * 1.5
     base = H - fs * 1.6
     left, right = fs * 1.5, fs * 3.2
     ph, pw = base - top, W - left - right
+    X = lambda i: left + (pw * i / (n - 1) if n > 1 else pw / 2)
+    Y = lambda v: base - ph * (float(v) - lo) / (hi - lo)
 
-    def X(i):
-        return left + (pw * i / (n - 1) if n > 1 else pw / 2)
-
-    def Y(v):
-        return base - ph * (float(v) - lo) / (hi - lo)
-
-    out = [_legend(series, fs, nc, W)] if m > 1 else []
+    out = [leg] if leg else []
     out.append(_axis(left, base, left + pw, base))
     step = max(1, math.ceil(n / 8))
     for i in range(0, n, step):

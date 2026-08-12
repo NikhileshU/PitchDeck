@@ -29,17 +29,17 @@ AUX = {"is", "are", "was", "were", "be", "been", "am", "has", "have", "had",
        "do", "does", "did", "cannot", "isn't", "aren't", "don't", "doesn't",
        "didn't", "won't", "can't", "needs", "need"}
 _LEMMAS = ("grow drive increase decrease decline miss require deliver show prove "
-           "win lose cost save exceed outperform convert hold lead trail expand "
+           "win lose save exceed outperform convert hold lead trail expand "
            "shrink double halve accelerate stall drop climb slip surge jump plunge "
            "recover improve worsen widen narrow reach stay remain become make take "
-           "give keep run move turn start stop end open close create build launch "
-           "ship fund hire spend earn generate reduce boost lift push pull demand "
-           "justify warrant unlock block enable threaten risk face own owe pay "
-           "commit approve reject delay concentrate split depend rely mean signal "
-           "suggest indicate confirm contradict undercut support strengthen weaken "
-           "outpace lag total average beat cut hit fall rise sell buy bring catch "
+           "give keep run move turn start stop end open close create launch "
+           "ship fund hire earn generate reduce boost lift push pull "
+           "justify warrant unlock enable threaten owe pay "
+           "commit approve reject concentrate split depend rely signal "
+           "suggest indicate confirm contradict undercut strengthen weaken "
+           "outpace lag beat cut hit fall rise sell bring catch "
            "choose draw find fly lay leave meet put say see send set stand stick "
-           "tell think understand wear go come get write free clear close").split()
+           "tell think understand wear go come get write").split()
 _IRREG = {"fell", "rose", "grew", "beat", "cut", "hit", "kept", "made", "took",
           "gave", "got", "ran", "went", "came", "wrote", "drove", "held", "led",
           "won", "lost", "spent", "paid", "built", "sank", "shrank", "broke",
@@ -63,9 +63,6 @@ _TEMPORAL = re.compile(
     r"\d{1,2}[/.-]\d{1,2}([/.-]\d{2,4})?|"
     r"(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*|"
     r"(mon|tue|wed|thu|fri|sat|sun)[a-z]*)$", re.I)
-
-
-IR_DIR = None  # set by main(); when None, image-existence is skipped (library use)
 
 
 def F(check, severity, message, card=None, block=None):
@@ -94,7 +91,7 @@ def _content_cards(ir):
 
 # ---- schema-valid ----------------------------------------------------------
 
-def _check_block_schema(b, cid, depth, f):
+def _check_block_schema(b, cid, depth, f, ir_dir=None):
     bid, t = b.get("id"), b.get("type")
     if not bid:
         f.append(F("schema-valid", "error", "block missing id", cid))
@@ -114,8 +111,8 @@ def _check_block_schema(b, cid, depth, f):
         if b.get("fit") not in (None, "cover", "contain"):
             f.append(F("schema-valid", "error", f"image fit {b.get('fit')!r} invalid", cid, bid))
         src = str(b.get("src") or "")
-        if IR_DIR and src and not src.startswith("data:"):
-            pth = Path(src) if Path(src).is_absolute() else IR_DIR / src
+        if ir_dir and src and not src.startswith("data:"):
+            pth = Path(src) if Path(src).is_absolute() else ir_dir / src
             if not pth.exists():
                 f.append(F("schema-valid", "error", f"image src not found: {src}", cid, bid))
     if t == "columns":
@@ -147,7 +144,7 @@ def _check_block_schema(b, cid, depth, f):
                     f.append(F("schema-valid", "error", "pie values must be non-negative", cid, bid))
 
 
-def check_schema(ir):
+def check_schema(ir, ir_dir=None):
     f = []
     if ir.get("schema") != "1.0":
         f.append(F("schema-valid", "error", f"schema must be \"1.0\", got {ir.get('schema')!r}"))
@@ -188,7 +185,7 @@ def check_schema(ir):
                     f.append(F("schema-valid", "error", f"duplicate id {bid!r}", cid))
                 else:
                     ids[bid] = True
-            _check_block_schema(b, cid, depth, f)
+            _check_block_schema(b, cid, depth, f, ir_dir)
     return f
 
 
@@ -216,27 +213,36 @@ IMPERATIVES = {"approve", "adopt", "fund", "invest", "launch", "ship", "buy",
                "pause", "delay", "accelerate", "choose", "pick", "commit", "sign",
                "renew", "cancel", "greenlight", "prioritize", "fix", "split"}
 DIRECTIONAL = {"up", "down", "flat", "above", "below", "under", "over", "ahead",
-               "behind", "past", "vs", "versus"}
+               "behind", "past"}
+DETERMINERS = {"the", "a", "an", "our", "my", "your", "their", "its", "this",
+               "that", "these", "those"}
+# strong figure: 2+ digits, a %, currency, decimal, or magnitude suffix —
+# so a lone "Q4" never counts as evidence of a figure claim
+_FIGURE = re.compile(r"\d{2,}|\d\s?%|[$€£]\s?\d|\d\.\d|\d\s?(pp|[KMBx])\b")
 
 
 def _is_claim(title):
-    """Heuristic, not NLP. Casing carries the signal: a Title-Case noun phrase
-    capitalises its nouns ("Cost Reduction Plan"), while a sentence-case claim
-    leaves its verb lowercase ("Q3 revenue fell 14%"). Also accepts imperatives
-    ("Approve ...") and verb-less figure claims ("Churn up 12% since April")."""
-    t = str(title)
-    words = re.findall(r"[A-Za-z][A-Za-z']*", t)
+    """Heuristic, not NLP — case-INsensitive. Position carries the signal:
+    finite verbs do not open an English declarative (imperatives are the
+    handled exception), so verb/aux tokens only count when non-first.
+    Verb-less figure claims ("Churn up 12% since April") are accepted;
+    bare vs-comparisons without a figure ("A build vs buy decision") are not.
+    Known residual: gerund/participle homonyms in second position."""
+    words = [w.lower() for w in re.findall(r"[A-Za-z][A-Za-z']*", str(title))]
     if not words:
         return False
-    lower = [w.lower() for w in words]
-    if any(w in AUX for w in lower):
+    if words[0] in IMPERATIVES:
         return True
-    if lower[0] in IMPERATIVES:
+    if any(w in AUX for w in words[1:]):
         return True
-    if re.search(r"\d", t) and any(w in DIRECTIONAL for w in lower):
+    has_figure = bool(_FIGURE.search(str(title)))
+    if ("vs" in words or "versus" in words) and not has_figure:
+        return False
+    if has_figure and any(w in DIRECTIONAL for w in words[1:]):
         return True
-    return any(w.islower() and (w in VERBS or (w.endswith("ed") and len(w) > 4))
-               for w in words[1:])
+    return any(w in VERBS
+               or (w.endswith("ed") and len(w) > 4 and words[i - 1] not in DETERMINERS)
+               for i, w in enumerate(words) if i > 0)
 
 
 def check_title_claim(ir):
@@ -454,9 +460,9 @@ def check_overflow(ir, theme):
 
 # ---- CLI -------------------------------------------------------------------
 
-def validate(ir, theme=None):
+def validate(ir, theme=None, ir_dir=None):
     findings = []
-    findings += check_schema(ir)
+    findings += check_schema(ir, ir_dir)
     findings += check_provenance(ir)
     findings += check_title_claim(ir)
     findings += check_answer_first(ir)
@@ -483,8 +489,6 @@ def main(argv=None):
                     help="revision-pass count recorded into findings.json")
     args = ap.parse_args(argv)
 
-    global IR_DIR
-    IR_DIR = Path(args.ir).resolve().parent
     try:
         ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
         theme = json.loads(Path(args.theme).read_text(encoding="utf-8")) if args.theme else None
@@ -495,7 +499,7 @@ def main(argv=None):
         print("validate: no --theme given; contrast, min-type-size and overflow "
               "checks skipped", file=sys.stderr)
 
-    findings = validate(ir, theme)
+    findings = validate(ir, theme, ir_dir=Path(args.ir).resolve().parent)
     out = {"deck": (ir.get("meta") or {}).get("title", ""),
            "passes": args.passes, "findings": findings}
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)

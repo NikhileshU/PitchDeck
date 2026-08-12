@@ -3,6 +3,8 @@
 > **FROZEN (phase 1).** Both renderers are written against this file. A block type that
 > cannot be expressed in **both** HTML and PPTX does not exist — the vocabulary is
 > capped at these 10. If this file and `BUILD-SPEC.md` disagree, the spec wins — flag it.
+> *(Repository only: `BUILD-SPEC.md` is development material and is not packaged
+> with the plugin. Inside an installed plugin this file is the contract.)*
 
 Every block has a stable, unique `id` and a `type` from the table below. No other
 types, ever.

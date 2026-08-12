@@ -15,8 +15,13 @@ real text, real charts, real tables that open in PowerPoint and can be edited.
 ```bash
 claude plugin marketplace add https://github.com/NikhileshU/PitchDeck
 claude plugin install deck-builder@pitchdeck
-pip install -r requirements.txt
+pip install python-pptx Pillow
 ```
+
+The plugin installs under `~/.claude/plugins/`, not into your working directory,
+so `pip install -r requirements.txt` has nothing to resolve there. Install the two
+packages by name as above — or, if you cloned the repository, run
+`pip install -r requirements.txt` from the clone.
 
 Python 3.9+. `python-pptx` and `Pillow` are needed for the PPTX renderer only.
 PDF export shells out to a Chromium-family browser (Chrome, Chromium, Edge or
@@ -123,6 +128,9 @@ report.py       --findings findings.json --judge judge.json --ir deck.json --out
 minimum-type and overflow checks silently do not run.
 
 ## Development
+
+From a clone of the repository — `evals/`, `demo/`, `BUILD-SPEC.md` and `CLAUDE.md`
+are development material and are not part of an installed plugin.
 
 ```bash
 python3 evals/run_golden.py             # 9 fixtures, full report output asserted

@@ -3,6 +3,8 @@
 > **FROZEN (phase 1).** Both renderers, the validator, and the playbooks are written
 > against this file. Changing it after phase 1 means rewriting `render_html.py` and
 > `render_pptx.py`. If this file and `BUILD-SPEC.md` disagree, the spec wins — flag it.
+> *(Repository only: `BUILD-SPEC.md` is development material and is not packaged
+> with the plugin. Inside an installed plugin this file is the contract.)*
 
 `deck.json` is the **only source of truth** for a deck. To fix a bad deck, regenerate
 the IR and re-render. Generated HTML, PPTX XML, and CSS are never hand-edited.

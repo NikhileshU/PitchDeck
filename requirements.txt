@@ -1,0 +1,15 @@
+# deck-builder runtime dependencies. Python 3.9+.
+#
+# Everything else is stdlib on purpose: validate.py, report.py, render_html.py
+# and export_pdf.py have no third-party imports at all, so a broken PPTX
+# dependency can never take the HTML/PDF path down with it.
+
+python-pptx>=1.0.0    # render_pptx.py — native charts, tables and text frames
+Pillow>=10.0.0        # render_pptx.py — image dimensions for cover/contain fit
+                      # (also a python-pptx dependency; pinned here because
+                      #  render_pptx.py imports it directly)
+
+# PDF export needs a Chromium-family browser on PATH or in the usual
+# application directory — Chrome, Chromium, Edge or Brave. It is invoked as a
+# subprocess, not imported, so it is not a pip dependency. Without one,
+# export_pdf.py exits 1 with a message and HTML + PPTX still ship.

@@ -12,7 +12,7 @@ Single-user Claude plugin that turns a prompt into a presentation deck: HTML, PD
 
 ---
 
-## CURRENT PHASE: 12
+## CURRENT PHASE: 12 — complete. All 13 phases (0–12) are done.
 
 Update this line at the end of every session.
 

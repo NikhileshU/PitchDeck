@@ -38,7 +38,7 @@ Violating any of these breaks the architecture.
 
 1. **`deck.json` (the IR) is the only source of truth.** Fix a bad deck by regenerating the IR and re-rendering. Never hand-edit generated HTML, PPTX XML, or CSS to correct deck content.
 2. **Renderers are peers, never chained.** `render_html` and `render_pptx` each read the IR independently. PPTX is never produced from HTML.
-3. **Renderers are pure:** `render(ir: dict, theme: dict, out_path: str) -> None` (the HTML renderer adds a `css: str = ""` kwarg — the CLI passes base.css *text* in; the pure core never discovers files). No globals, no env reads, no network. Paths passed in.
+3. **Renderers are pure:** `render(ir: dict, theme: dict, out_path: str) -> None`, plus two kwargs that are always *passed in, never discovered*: `css: str = ""` on the HTML renderer (base.css **text**, not a path) and `ir_dir=None` on both (the directory relative image srcs resolve against — R13-M1; omit it and every src must already be absolute, or a data URI for HTML). No globals, no env reads, no network. **Neither renderer mutates the IR it is given** — image resolution works on a copy, so rendering one format can never break its peer.
 4. **`base.css` is layout only.** Every colour, size, spacing value is `var(--*)`. Zero hex literals.
 5. **Themes are JSON.** `render_pptx.py` cannot parse CSS. Both renderers read `themes/*.json`.
 6. **No archetype logic in `scripts/`.** No `if archetype == ...` anywhere in a renderer. Archetype shapes the IR, prompt-side.

@@ -1,0 +1,77 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.9 is the floor the README promises; 3.12 is what most machines
+        # actually run. Both, or the promise is untested.
+        python-version: ["3.9", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements-dev.txt
+
+      - name: Test
+        run: python -m pytest -q
+
+      # The golden set also runs under pytest, but keeping it as its own step
+      # means a golden diff is legible in the job list without opening logs.
+      - name: Golden set
+        run: python evals/run_golden.py
+
+      - name: Tier-1 check coverage
+        run: python evals/run_golden.py --coverage
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the plugin archive
+        run: |
+          mkdir -p dist
+          zip -r dist/deck-builder.plugin \
+            .claude-plugin skills scripts themes README.md requirements.txt \
+            -x '*/__pycache__/*' '*.DS_Store'
+
+      - name: The packaged subset must stand alone
+        # The archive excludes evals/, BUILD-SPEC.md and CLAUDE.md. If a script
+        # ever reaches for one of them, it breaks only after install — which is
+        # the worst place to find out.
+        run: |
+          mkdir -p /tmp/pkg && cd /tmp/pkg
+          unzip -q "$GITHUB_WORKSPACE/dist/deck-builder.plugin"
+          pip install -r requirements.txt
+          python scripts/validate.py \
+            --ir "$GITHUB_WORKSPACE/demo/deck.json" \
+            --theme themes/slate.json --out /tmp/f.json
+          python scripts/render_html.py \
+            --ir "$GITHUB_WORKSPACE/demo/deck.json" \
+            --theme themes/slate.json --out /tmp/out/deck.html
+          python scripts/render_pptx.py \
+            --ir "$GITHUB_WORKSPACE/demo/deck.json" \
+            --theme themes/slate.json --out /tmp/out/deck.pptx
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deck-builder-plugin
+          path: dist/deck-builder.plugin

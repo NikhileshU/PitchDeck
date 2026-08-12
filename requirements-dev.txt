@@ -1,0 +1,4 @@
+# Development-only. Kept out of requirements.txt on purpose: the shipped
+# plugin installs with two packages, and that is what makes it easy to install.
+-r requirements.txt
+pytest>=8.0

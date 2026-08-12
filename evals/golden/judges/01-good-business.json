@@ -1,0 +1,10 @@
+{
+  "scores": {
+    "storyline": { "score": 5, "note": "Ask, problem, evidence, fix, payback, deadline — reads in order." },
+    "verticalLogic": { "score": 4, "note": "Every title is a claim its blocks actually support." },
+    "archetypeFit": { "score": 5, "note": "A single decision put to an executive, answer first." },
+    "audienceFit": { "score": 4, "note": "Supply detail is right for ops; a CFO would want the payback math earlier." },
+    "density": { "score": 4, "note": "Two to three blocks a card; nothing is competing for the eye." }
+  },
+  "concerns": []
+}

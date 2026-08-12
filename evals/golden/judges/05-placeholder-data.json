@@ -1,0 +1,13 @@
+{
+  "scores": {
+    "storyline": { "score": 4, "note": "The shape of the argument is sound." },
+    "verticalLogic": { "score": 3, "note": "Titles assert numbers the deck cannot yet stand behind." },
+    "archetypeFit": { "score": 4, "note": "Right form for the audience." },
+    "audienceFit": { "score": 3, "note": "Presenting invented figures to this room would not survive one question." },
+    "density": { "score": 4, "note": "Well within budget." }
+  },
+  "concerns": [
+    { "card": "c2", "message": "If the real conversion numbers differ in direction, the recommendation changes — not just the chart." },
+    { "card": "c4", "message": "The placeholder churn table sets an expectation of cohort-level detail that may not exist yet." }
+  ]
+}

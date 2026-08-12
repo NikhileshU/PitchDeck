@@ -1,0 +1,89 @@
+{
+  "schema": "1.0",
+  "meta": { "title": "Northwind Seed Round", "archetype": "startup-pitch",
+            "theme": "slate", "aspect": "16:9" },
+  "cards": [
+    { "id": "c1", "layout": "title", "title": "Northwind Seed Round",
+      "subtitle": "Series Seed · August 2026", "role": null, "blocks": [], "notes": null },
+    { "id": "c2", "layout": "content",
+      "title": "Field crews lose 6.2 hours a week to paperwork", "role": "problem",
+      "blocks": [
+        { "id": "c2b1", "type": "kpi", "value": "6.2 hrs",
+          "label": "lost per crew each week to manual reporting",
+          "delta": "16% of a billable week", "source": "user" },
+        { "id": "c2b2", "type": "callout", "tone": "warn",
+          "text": "Every lost hour is billable time the contractor never invoices." }
+      ],
+      "notes": "Open on the pain in the contractor's own units — hours, not features." },
+    { "id": "c3", "layout": "content",
+      "title": "Northwind turns a spoken site note into a filed report",
+      "role": "solution",
+      "blocks": [
+        { "id": "c3b1", "type": "bullets", "items": [
+            "Crew lead dictates 40 seconds of site notes on the drive back",
+            "Northwind fills the daily log, the safety form and the change order",
+            "Foreman approves from the phone; the office never rekeys anything" ] },
+        { "id": "c3b2", "type": "callout", "tone": "good",
+          "text": "No new app for the crew — it runs on the phone they already carry." }
+      ],
+      "notes": "Demo lives here in the live pitch. Keep the story to one crew, one day." },
+    { "id": "c4", "layout": "content",
+      "title": "Pilot crews cut reporting time by 71%", "role": null,
+      "blocks": [
+        { "id": "c4b1", "type": "chart", "chart": "bar", "source": "user",
+          "caption": "Weekly reporting hours per crew, before and after (3 pilots)",
+          "data": { "categories": ["Vetter", "BuildRite", "Corso"],
+                    "series": [ { "name": "Before", "values": [6.4, 5.9, 6.8] },
+                                { "name": "After", "values": [1.9, 1.7, 1.9] } ] } },
+        { "id": "c4b2", "type": "text",
+          "text": "All three pilots kept the change after the free period ended." }
+      ],
+      "notes": "The retention line matters more than the hours — they paid to keep it." },
+    { "id": "c5", "layout": "section", "title": "The market", "subtitle": null,
+      "role": null, "blocks": [], "notes": null },
+    { "id": "c6", "layout": "content",
+      "title": "180,000 US contractors run crews of five or more", "role": null,
+      "blocks": [
+        { "id": "c6b1", "type": "table", "source": "derived",
+          "headers": ["Segment", "Firms", "Crews", "Annual value"],
+          "rows": [ ["Specialty trade", "112K", "410K", "$1.6B"],
+                    ["General building", "48K", "260K", "$1.0B"],
+                    ["Civil and heavy", "20K", "150K", "$0.6B"] ] },
+        { "id": "c6b2", "type": "text",
+          "text": "Annual value assumes $49 per crew per month at today's pilot pricing." }
+      ],
+      "notes": "Bottom-up only. If asked for top-down, the number is not the argument." },
+    { "id": "c7", "layout": "content",
+      "title": "Revenue grew from zero to $480K ARR in nine months", "role": null,
+      "blocks": [
+        { "id": "c7b1", "type": "chart", "chart": "line", "source": "user",
+          "caption": "Committed ARR by month (US$K)",
+          "data": { "categories": ["Jan", "Mar", "May", "Jul", "Sep"],
+                    "series": [ { "name": "ARR", "values": [0, 62, 148, 310, 480] } ] } }
+      ],
+      "notes": "Growth is sales-led today; the self-serve motion is the use of funds." },
+    { "id": "c8", "layout": "content",
+      "title": "Unit economics hold at 4.6x LTV to CAC", "role": null,
+      "blocks": [
+        { "id": "c8b1", "type": "kpi", "value": "4.6x",
+          "label": "LTV to CAC across the first 42 accounts",
+          "delta": "CAC payback in 7 months", "source": "derived" },
+        { "id": "c8b2", "type": "bullets", "items": [
+            "$1,180 blended CAC, two thirds of it founder-led selling",
+            "Net revenue retention of 118% on the eleven oldest accounts",
+            "Gross margin of 81% after inference and telephony costs" ] }
+      ],
+      "notes": "CAC rises when founder selling stops — say so before they ask." },
+    { "id": "c9", "layout": "content",
+      "title": "We are raising $3M to reach 1,000 crews by 2027", "role": "ask",
+      "blocks": [
+        { "id": "c9b1", "type": "callout", "tone": "info",
+          "text": "$3M on a $15M post, led, with 18 months of runway to Series A." },
+        { "id": "c9b2", "type": "bullets", "items": [
+            "$1.4M to a six-person engineering team and the self-serve motion",
+            "$0.9M to two field sales hires in Texas and the Southeast",
+            "$0.7M to compliance packs for the four largest state regimes" ] }
+      ],
+      "notes": "Close on the milestone the round buys, not on the round itself." }
+  ]
+}

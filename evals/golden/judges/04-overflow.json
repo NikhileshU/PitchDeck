@@ -1,0 +1,12 @@
+{
+  "scores": {
+    "storyline": { "score": 3, "note": "The argument is there, but two cards are carrying four cards of load." },
+    "verticalLogic": { "score": 3, "note": "c2 makes several claims at once; only the first is in the title." },
+    "archetypeFit": { "score": 4, "note": "Decision-shaped, and the ask is on card 2." },
+    "audienceFit": { "score": 3, "note": "Nobody reads a 400-word block from the back of a room." },
+    "density": { "score": 1, "note": "Two cards overflow outright; a third sits at the ceiling." }
+  },
+  "concerns": [
+    { "card": "c2", "message": "Splitting c2 into three cards pushes the deck past the point where the ask still reads as urgent." }
+  ]
+}

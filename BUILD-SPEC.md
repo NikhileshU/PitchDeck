@@ -69,14 +69,16 @@ deck-builder/
 │   ├── validate.py
 │   └── report.py
 ├── evals/
+│   ├── run_golden.py                   test harness — not a shipped script
 │   └── golden/
 │       ├── 01-good-business.json
 │       ├── 02-topic-titles.json        (bad: titles are noun phrases)
 │       ├── 03-buried-answer.json       (bad: recommendation on card 9)
-│       ├── 04-overflow.json            (bad: card exceeds height)
+│       ├── 04-overflow.json            (bad: two cards overflow; one sits at ~99%)
 │       ├── 05-placeholder-data.json    (bad: unlabelled invented metrics)
 │       ├── 06-warn-titles.json         (warn path: noun-phrase titles, no error)
 │       ├── 07-good-pitch.json
+│       ├── judges/                     fixed judge.json input, one per fixture
 │       └── expected/                   one .json per fixture
 ├── requirements.txt
 └── README.md
@@ -409,7 +411,7 @@ Each phase has a checkpoint. Do not start the next phase until the checkpoint pa
 | 7 | `business-stakeholder.md` playbook + `build-deck/SKILL.md` | — |
 | 8 | **Generate one real deck end to end.** | Open the PDF. Read the report. Go/no-go before continuing. |
 | 9 | `render_pptx.py` — peer renderer against the frozen IR | Same fixture as phase 3. Text is selectable; charts and tables are native objects. **Peer agreement:** `all-blocks.json` through both renderers — same block order, same top edge (card-schema.md §5.1). |
-| 10 | Golden set — 7 fixtures (01–07; the pitch fixture is `07-good-pitch.json`, since 06 asserts the title-warn path) + `expected/` | Assert on full report output, not just pass/fail. |
+| 10 | Golden set — 7 fixtures (01–07; the pitch fixture is `07-good-pitch.json`, since 06 asserts the title-warn path) + `expected/` | Assert on full report output, not just pass/fail: `python3 evals/run_golden.py` → 7/7, comparing every finding, the inline summary and every line of `report.md`. Judge input is fixed per fixture in `golden/judges/`. |
 | 11 | Remaining 3 playbooks, `warm.json`, `mono.json`, `review-deck/SKILL.md` | — |
 | 12 | `plugin.json`, `README.md`, `requirements.txt`; package as `.plugin` | Structure validates; installs in Claude Code and Cowork. |
 

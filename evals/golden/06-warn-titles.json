@@ -2,7 +2,7 @@
   "schema": "1.0",
   "meta": { "title": "Platform Review", "archetype": "product-demo",
             "theme": "slate", "aspect": "16:9",
-            "_note": "Asserts the WARN path of the R5-A1 hybrid: 4+-token noun-phrase titles (no verb, no figure) draw exactly 3 title-is-claim warns, zero errors, exit 0. Titles are 4+-token variants of the register's examples because 3-token titles trip the narrow error rule." },
+            "_note": "Asserts the WARN path of the R5-A1 hybrid: 4+-token noun-phrase titles (no verb, no figure) draw exactly 3 title-is-claim warns, zero errors, exit 0. Titles are 4+-token variants of the register's examples because 3-token titles trip the narrow error rule. c4 also carries no speaker notes, which is the only `info` finding in the golden set — it pins the spec-§12 placement of info under 'Also noted' in report.md §3, below the real warnings." },
   "cards": [
     { "id": "c1", "layout": "title", "title": "Platform Review",
       "subtitle": "Product · August 2026", "role": null, "blocks": [], "notes": null },
@@ -30,6 +30,6 @@
             "Hold multi-region until two design partners commit",
             "Bundle SSO with the enterprise tier" ] }
       ],
-      "notes": "Sequencing options." }
+      "notes": null }
   ]
 }

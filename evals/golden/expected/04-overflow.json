@@ -1,0 +1,87 @@
+{
+  "fixture": "04-overflow.json",
+  "theme": "slate",
+  "exit": 1,
+  "counts": {
+    "error": 2,
+    "warn": 1
+  },
+  "findings": [
+    {
+      "check": "text-budget",
+      "severity": "warn",
+      "card": "c3",
+      "block": "c3b1",
+      "message": "text is 2389 chars (max 240)",
+      "resolved": false
+    },
+    {
+      "check": "overflow",
+      "severity": "error",
+      "card": "c2",
+      "block": null,
+      "message": "content ≈676pt exceeds 456pt even at the 11% ramp floor — split the card",
+      "resolved": false
+    },
+    {
+      "check": "overflow",
+      "severity": "error",
+      "card": "c3",
+      "block": null,
+      "message": "content ≈553pt exceeds 456pt even at the 11% ramp floor — split the card",
+      "resolved": false
+    }
+  ],
+  "inline_summary": [
+    "Q3 Everything Review · business-stakeholder · slate · 5 cards · 0 revision passes",
+    "",
+    "Gate 1  schema         ✓",
+    "Gate 2  deterministic  ✗  2 errors · 1 warnings",
+    "Gate 3  judged         2.8 / 5   (lowest: density 1)",
+    "",
+    "!  1 concern raised — see report.md"
+  ],
+  "report_md": [
+    "# Q3 Everything Review — quality report",
+    "",
+    "business-stakeholder · slate · 5 cards · 0 revision passes",
+    "",
+    "## 1 · Unverified inputs",
+    "",
+    "None — every chart, table and KPI is user-supplied or derived.",
+    "",
+    "## 2 · Errors",
+    "",
+    "- `c2` [overflow] — content ≈676pt exceeds 456pt even at the 11% ramp floor — split the card",
+    "- `c3` [overflow] — content ≈553pt exceeds 456pt even at the 11% ramp floor — split the card",
+    "",
+    "**2 unresolved — this deck must not ship.**",
+    "",
+    "## 3 · Warnings",
+    "",
+    "- `c3/c3b1` [text-budget] — text is 2389 chars (max 240)",
+    "",
+    "## 4 · Concerns",
+    "",
+    "- `c2` — Splitting c2 into three cards pushes the deck past the point where the ask still reads as urgent.",
+    "",
+    "Concerns are editorial judgment calls. They are never auto-fixed.",
+    "",
+    "## 5 · Tier-2 scorecard",
+    "",
+    "| Dimension | Score | Note |",
+    "|---|---|---|",
+    "| storyline | 3 | The argument is there, but two cards are carrying four cards of load. |",
+    "| verticalLogic | 3 | c2 makes several claims at once; only the first is in the title. |",
+    "| archetypeFit | 4 | Decision-shaped, and the ask is on card 2. |",
+    "| audienceFit | 3 | Nobody reads a 400-word block from the back of a room. |",
+    "| density | 1 | Two cards overflow outright; a third sits at the ceiling. |",
+    "",
+    "Mean **2.8 / 5**, lowest **1** — gate (mean ≥ 3.5, no dimension < 3): **FAIL**",
+    "",
+    "## 6 · Revision log",
+    "",
+    "No revision passes were needed.",
+    ""
+  ]
+}

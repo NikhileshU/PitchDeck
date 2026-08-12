@@ -21,9 +21,11 @@ Establish, asking only when genuinely unclear:
 - **Data**: what the user supplied. Numbers they give are `source: "user"`;
   numbers you compute from theirs are `"derived"`; structure-only values you
   invent are `"placeholder"` — and marking them is mandatory, not optional.
-- **Theme**: `slate`. (`warm` and `mono` ship in a later phase — if the requested
+- **Theme**: `slate` (dark, default) · `warm` (light, serif, warm paper) ·
+  `mono` (light, near-monochrome). All three share the same type scale and
+  spacing, so the theme never changes whether a card overflows. If a requested
   theme has no file in `${CLAUDE_PLUGIN_ROOT}/themes/`, fall back to `slate` and
-  say so rather than failing.)
+  say so rather than failing.
 
 ## 2 · Load the contracts
 

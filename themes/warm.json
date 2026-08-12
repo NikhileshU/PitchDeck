@@ -1,0 +1,28 @@
+{
+  "name": "warm",
+  "color": {
+    "bg":      "#FBF6EE",
+    "surface": "#F3E9DA",
+    "text":    "#33291F",
+    "muted":   "#6B5847",
+    "accent":  "#A8410E",
+    "series":  ["#A8410E", "#2F6F5B", "#3D5A99", "#8A5A2B", "#7A3F6B"],
+    "tone":    { "info": "#3D5A99", "warn": "#A8410E", "good": "#2F6F5B" }
+  },
+  "type": {
+    "family":   "Georgia, 'Iowan Old Style', serif",
+    "familyMono": "ui-monospace, monospace",
+    "scale": {
+      "title":     40,
+      "cardTitle": 28,
+      "body":      18,
+      "caption":   12
+    },
+    "lineHeight": 1.35
+  },
+  "space": {
+    "cardPad":  42,
+    "blockGap": 18,
+    "radius":   12
+  }
+}

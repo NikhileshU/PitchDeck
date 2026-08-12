@@ -96,7 +96,7 @@ skills/build-deck/{SKILL.md,references/}
 skills/review-deck/SKILL.md
 themes/{base.css,slate.json,warm.json,mono.json}
 scripts/{render_html,render_pptx,export_pdf,validate,report}.py
-evals/golden/{01..07}-*.json,judges/,expected/
+evals/golden/{01..09}-*.json,judges/,themes/,runs.json,expected/
 evals/run_golden.py                    test harness, not a shipped script
 ```
 

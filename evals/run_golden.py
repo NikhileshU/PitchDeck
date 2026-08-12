@@ -8,16 +8,21 @@ inline summary, and every line of `report.md` — against
 severity or a moved overflow constant all surface as a line diff.
 
 Judge input is fixed per fixture in `evals/golden/judges/NN-*.json` — the Tier-2
-scores an honest judge would give that deck. `passes` is 0 for every fixture: the
-revision branch of report.md §6 needs a `resolved` finding, which `validate.py`
-never emits, so the golden set covers that section's zero-pass branch only.
+scores an honest judge would give that deck. `evals/golden/runs.json` supplies the
+revision context a single validate pass cannot produce (`passes`, and which
+findings count as resolved), so report.md §6 is pinned in both its branches.
+
+A fixture's theme comes from `meta.theme`, resolved against `evals/golden/themes/`
+first and `themes/` second — that is how `08-bad-theme.json` reaches a deliberately
+broken theme without one ever sitting in the shipped theme directory.
 
 This is a test harness, not a plugin script: the five scripts in `scripts/` are the
 shipped surface (invariant 10) and this file stays out of it.
 
-    python3 evals/run_golden.py            # assert — exit 1 on any mismatch
-    python3 evals/run_golden.py --only 04  # a single fixture
-    python3 evals/run_golden.py --update   # rewrite expected/ — read the diff first
+    python3 evals/run_golden.py             # assert — exit 1 on any mismatch
+    python3 evals/run_golden.py --only 04   # a single fixture
+    python3 evals/run_golden.py --coverage  # which of the 14 checks the set fires
+    python3 evals/run_golden.py --update    # rewrite expected/ — read the diff first
 """
 
 import argparse
@@ -36,6 +41,11 @@ GOLDEN = ROOT / "evals" / "golden"
 EXPECTED = GOLDEN / "expected"
 JUDGES = GOLDEN / "judges"
 SEVERITIES = ("unverified", "error", "warn", "concern", "info")
+# the 14 Tier-1 checks; the set is expected to fire every one of them
+CHECKS = ("schema-valid", "data-provenance", "title-is-claim", "answer-first",
+          "card-count", "title-length", "one-message", "evidence-present",
+          "text-budget", "chart-fit", "notes-present", "contrast",
+          "min-type-size", "overflow")
 
 
 def _read(path):
@@ -47,16 +57,28 @@ def fixtures(only=None):
             if only is None or p.name.startswith(only)]
 
 
+def _theme_path(name):
+    """Fixture themes shadow shipped ones, so a broken theme never ships."""
+    local = GOLDEN / "themes" / f"{name}.json"
+    return local if local.exists() else ROOT / "themes" / f"{name}.json"
+
+
 def run(fx):
     """Everything the pipeline says about one fixture, as comparable JSON."""
     ir = _read(fx)
     theme_name = (ir.get("meta") or {}).get("theme") or "slate"
-    theme = _read(ROOT / "themes" / f"{theme_name}.json")
+    theme = _read(_theme_path(theme_name))
     judge = _read(JUDGES / fx.name)
+    ctx = _read(GOLDEN / "runs.json").get(fx.name) or {}
 
     findings = V.validate(ir, theme, ir_dir=GOLDEN)
-    fjson = {"deck": (ir.get("meta") or {}).get("title", ""), "passes": 0,
-             "findings": findings}
+    for sel in ctx.get("resolved") or []:
+        check, _, sev = sel.partition(":")
+        for f in findings:
+            if f["check"] == check and (not sev or f["severity"] == sev):
+                f["resolved"] = True
+    fjson = {"deck": (ir.get("meta") or {}).get("title", ""),
+             "passes": ctx.get("passes", 0), "findings": findings}
     counts = {s: sum(1 for f in findings if f["severity"] == s) for s in SEVERITIES}
     return {
         "fixture": fx.name,
@@ -73,18 +95,42 @@ def _lines(obj):
     return json.dumps(obj, indent=2, ensure_ascii=False).split("\n")
 
 
+def coverage(fxs):
+    """Which fixture exercises which Tier-1 check. A check no fixture fires is a
+    check that could be silently broken and still ship green (R10-M1/R11-H1)."""
+    hits = {c: [] for c in CHECKS}
+    unknown = set()
+    for fx in fxs:
+        for f in run(fx)["findings"]:
+            (hits[f["check"]] if f["check"] in hits else unknown).append(fx.name[:2])
+    for c in CHECKS:
+        where = sorted(set(hits[c]))
+        print(f"  {c:16s} {len(hits[c]):3d} findings  "
+              f"{'in ' + ', '.join(where) if where else 'NEVER FIRES'}")
+    if unknown:
+        print(f"\n  check names not in CHECKS: {sorted(set(unknown))}")
+    missing = [c for c in CHECKS if not hits[c]]
+    print(f"\n{len(CHECKS) - len(missing)}/{len(CHECKS)} Tier-1 checks exercised"
+          + (f" — UNEXERCISED: {', '.join(missing)}" if missing else ""))
+    return 1 if missing or unknown else 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--update", action="store_true",
                     help="rewrite expected/ from current behaviour")
     ap.add_argument("--only", default=None, help="fixture number or name prefix")
+    ap.add_argument("--coverage", action="store_true",
+                    help="report which Tier-1 checks the set fires; exit 1 if any is unexercised")
     args = ap.parse_args(argv)
 
     fxs = fixtures(args.only)
     if not fxs:
         print("run_golden: no fixtures matched", file=sys.stderr)
         return 1
+    if args.coverage:
+        return coverage(fxs)
     EXPECTED.mkdir(parents=True, exist_ok=True)
 
     failed = []
@@ -92,9 +138,19 @@ def main(argv=None):
         actual = run(fx)
         exp_path = EXPECTED / fx.name
         if args.update:
+            new = not exp_path.exists()
             exp_path.write_text(json.dumps(actual, indent=2, ensure_ascii=False) + "\n",
                                 encoding="utf-8")
-            print(f"updated  {fx.name}")
+            # a first baseline has no diff to review, so print what it recorded —
+            # otherwise a wrong baseline is invisible at exactly the moment it is
+            # cheapest to catch (R10-L2)
+            tally = " · ".join(f"{n} {s}" for s, n in actual["counts"].items()) or "clean"
+            print(f"{'CREATED' if new else 'updated'}  {fx.name}  "
+                  f"exit {actual['exit']}  {tally}")
+            if new:
+                for f in actual["findings"]:
+                    print(f"             {f['severity']:10s} {f['check']:16s} "
+                          f"{f.get('card') or 'deck'}  {f['message']}")
             continue
         if not exp_path.exists():
             failed.append(fx.name)

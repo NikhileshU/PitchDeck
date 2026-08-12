@@ -13,7 +13,7 @@
       "card": "c2",
       "block": "c2b1",
       "message": "chart block has no source (user|derived|placeholder)",
-      "resolved": false
+      "resolved": true
     },
     {
       "check": "data-provenance",
@@ -21,7 +21,7 @@
       "card": "c3",
       "block": "c3b1",
       "message": "kpi block has no source (user|derived|placeholder)",
-      "resolved": false
+      "resolved": true
     },
     {
       "check": "data-provenance",
@@ -33,7 +33,7 @@
     }
   ],
   "inline_summary": [
-    "Expansion Case · business-stakeholder · slate · 4 cards · 0 revision passes",
+    "Expansion Case · business-stakeholder · slate · 4 cards · 2 revision passes",
     "",
     "Gate 1  schema         ✓",
     "Gate 2  deterministic  ✗  2 errors · 0 warnings",
@@ -45,7 +45,7 @@
   "report_md": [
     "# Expansion Case — quality report",
     "",
-    "business-stakeholder · slate · 4 cards · 0 revision passes",
+    "business-stakeholder · slate · 4 cards · 2 revision passes",
     "",
     "## 1 · Unverified inputs",
     "",
@@ -55,10 +55,8 @@
     "",
     "## 2 · Errors",
     "",
-    "- `c2/c2b1` [data-provenance] — chart block has no source (user|derived|placeholder)",
-    "- `c3/c3b1` [data-provenance] — kpi block has no source (user|derived|placeholder)",
-    "",
-    "**2 unresolved — this deck must not ship.**",
+    "- `c2/c2b1` [data-provenance] — chart block has no source (user|derived|placeholder) *(resolved by revision)*",
+    "- `c3/c3b1` [data-provenance] — kpi block has no source (user|derived|placeholder) *(resolved by revision)*",
     "",
     "## 3 · Warnings",
     "",
@@ -85,7 +83,10 @@
     "",
     "## 6 · Revision log",
     "",
-    "No revision passes were needed.",
+    "2 revision passes.",
+    "",
+    "- `c2/c2b1` [data-provenance] — chart block has no source (user|derived|placeholder) *(resolved by revision)*",
+    "- `c3/c3b1` [data-provenance] — kpi block has no source (user|derived|placeholder) *(resolved by revision)*",
     ""
   ]
 }

@@ -6,7 +6,8 @@
  * value from pt to CSS px (x 4/3):
  *
  *   --color-bg --color-surface --color-text --color-muted --color-accent
- *   --color-series-1 ... --color-series-5
+ *   --color-series-1 ... --color-series-N  (one per theme series colour; a chart
+ *                                          with more series cycles back to 1)
  *   --color-tone-info --color-tone-warn --color-tone-good
  *   --type-family --type-family-mono
  *   --type-title --type-card-title --type-body --type-caption   (px)

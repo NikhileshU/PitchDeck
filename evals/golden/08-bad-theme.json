@@ -1,0 +1,17 @@
+{
+  "schema": "1.0",
+  "meta": { "title": "Theme Gate Probe", "archetype": "business-stakeholder",
+            "theme": "bad-contrast", "aspect": "16:9",
+            "_note": "The DECK is clean; the THEME is the defect. meta.theme resolves to evals/golden/themes/bad-contrast.json — a deliberately broken theme kept out of themes/ so it can never be offered to a user. Covers the two theme-dependent Tier-1 checks the deck fixtures cannot reach: contrast (text/muted below 4.5:1, accent below 3:1, a series pair under 60 RGB distance, a series under 3:1 on surface, and one non-hex colour) and min-type-size (body 15pt). Cards are deliberately light so overflow stays silent." },
+  "cards": [
+    { "id": "c1", "layout": "title", "title": "Theme Gate Probe",
+      "subtitle": "Design system · August 2026", "role": null, "blocks": [], "notes": null },
+    { "id": "c2", "layout": "content",
+      "title": "A clean deck still fails on a broken theme", "role": "recommendation",
+      "blocks": [
+        { "id": "c2b1", "type": "kpi", "value": "4.5:1",
+          "label": "the floor every text pair must clear", "source": "user" }
+      ],
+      "notes": "Nothing here is wrong with the deck — every finding comes from the theme." }
+  ]
+}

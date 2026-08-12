@@ -1,0 +1,10 @@
+{
+  "scores": {
+    "storyline": { "score": 4, "note": "Two cards, one point, stated plainly." },
+    "verticalLogic": { "score": 4, "note": "The KPI is exactly what the title claims." },
+    "archetypeFit": { "score": 3, "note": "A probe, not a real decision deck." },
+    "audienceFit": { "score": 3, "note": "Written for the build, not for a room." },
+    "density": { "score": 5, "note": "Deliberately light." }
+  },
+  "concerns": []
+}

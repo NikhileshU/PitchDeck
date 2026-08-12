@@ -1,0 +1,146 @@
+{
+  "fixture": "08-bad-theme.json",
+  "theme": "bad-contrast",
+  "exit": 1,
+  "counts": {
+    "error": 6,
+    "warn": 4
+  },
+  "findings": [
+    {
+      "check": "title-is-claim",
+      "severity": "warn",
+      "card": "c2",
+      "block": null,
+      "message": "title is a noun phrase, not a claim: 'A clean deck still fails on a broken theme'",
+      "resolved": false
+    },
+    {
+      "check": "contrast",
+      "severity": "error",
+      "card": null,
+      "block": null,
+      "message": "theme colour series[4] must be #RRGGBB hex, got 'rgb(1,2,3)'",
+      "resolved": false
+    },
+    {
+      "check": "contrast",
+      "severity": "error",
+      "card": null,
+      "block": null,
+      "message": "text on bg is 3.00:1 (needs 4.5:1)",
+      "resolved": false
+    },
+    {
+      "check": "contrast",
+      "severity": "error",
+      "card": null,
+      "block": null,
+      "message": "text on surface is 2.64:1 (needs 4.5:1)",
+      "resolved": false
+    },
+    {
+      "check": "contrast",
+      "severity": "error",
+      "card": null,
+      "block": null,
+      "message": "muted on bg is 1.85:1 (needs 4.5:1)",
+      "resolved": false
+    },
+    {
+      "check": "contrast",
+      "severity": "error",
+      "card": null,
+      "block": null,
+      "message": "muted on surface is 1.63:1 (needs 4.5:1)",
+      "resolved": false
+    },
+    {
+      "check": "contrast",
+      "severity": "warn",
+      "card": null,
+      "block": null,
+      "message": "accent on bg is 1.27:1 (large-text floor is 3:1)",
+      "resolved": false
+    },
+    {
+      "check": "contrast",
+      "severity": "warn",
+      "card": null,
+      "block": null,
+      "message": "series colours #5566CC/#5A6BD0 are hard to distinguish",
+      "resolved": false
+    },
+    {
+      "check": "contrast",
+      "severity": "warn",
+      "card": null,
+      "block": null,
+      "message": "series[2] #D0D0D8 is 1.21:1 on surface (large-object floor is 3:1)",
+      "resolved": false
+    },
+    {
+      "check": "min-type-size",
+      "severity": "error",
+      "card": null,
+      "block": null,
+      "message": "type.scale.body 15pt is below 16pt",
+      "resolved": false
+    }
+  ],
+  "inline_summary": [
+    "Theme Gate Probe · business-stakeholder · bad-contrast · 2 cards · 0 revision passes",
+    "",
+    "Gate 1  schema         ✓",
+    "Gate 2  deterministic  ✗  6 errors · 4 warnings",
+    "Gate 3  judged         3.8 / 5   (lowest: archetypeFit 3)"
+  ],
+  "report_md": [
+    "# Theme Gate Probe — quality report",
+    "",
+    "business-stakeholder · bad-contrast · 2 cards · 0 revision passes",
+    "",
+    "## 1 · Unverified inputs",
+    "",
+    "None — every chart, table and KPI is user-supplied or derived.",
+    "",
+    "## 2 · Errors",
+    "",
+    "- `deck` [contrast] — theme colour series[4] must be #RRGGBB hex, got 'rgb(1,2,3)'",
+    "- `deck` [contrast] — text on bg is 3.00:1 (needs 4.5:1)",
+    "- `deck` [contrast] — text on surface is 2.64:1 (needs 4.5:1)",
+    "- `deck` [contrast] — muted on bg is 1.85:1 (needs 4.5:1)",
+    "- `deck` [contrast] — muted on surface is 1.63:1 (needs 4.5:1)",
+    "- `deck` [min-type-size] — type.scale.body 15pt is below 16pt",
+    "",
+    "**6 unresolved — this deck must not ship.**",
+    "",
+    "## 3 · Warnings",
+    "",
+    "- `c2` [title-is-claim] — title is a noun phrase, not a claim: 'A clean deck still fails on a broken theme'",
+    "- `deck` [contrast] — accent on bg is 1.27:1 (large-text floor is 3:1)",
+    "- `deck` [contrast] — series colours #5566CC/#5A6BD0 are hard to distinguish",
+    "- `deck` [contrast] — series[2] #D0D0D8 is 1.21:1 on surface (large-object floor is 3:1)",
+    "",
+    "## 4 · Concerns",
+    "",
+    "None raised.",
+    "",
+    "## 5 · Tier-2 scorecard",
+    "",
+    "| Dimension | Score | Note |",
+    "|---|---|---|",
+    "| storyline | 4 | Two cards, one point, stated plainly. |",
+    "| verticalLogic | 4 | The KPI is exactly what the title claims. |",
+    "| archetypeFit | 3 | A probe, not a real decision deck. |",
+    "| audienceFit | 3 | Written for the build, not for a room. |",
+    "| density | 5 | Deliberately light. |",
+    "",
+    "Mean **3.8 / 5**, lowest **3** — gate (mean ≥ 3.5, no dimension < 3): **PASS**",
+    "",
+    "## 6 · Revision log",
+    "",
+    "No revision passes were needed.",
+    ""
+  ]
+}

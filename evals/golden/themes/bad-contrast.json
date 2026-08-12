@@ -1,0 +1,28 @@
+{
+  "name": "bad-contrast",
+  "color": {
+    "bg":      "#F2F2F2",
+    "surface": "#E4E4E4",
+    "text":    "#8C8C8C",
+    "muted":   "#B4B4B4",
+    "accent":  "#D8D8D8",
+    "series":  ["#5566CC", "#5A6BD0", "#D0D0D8", "#2F6F5B", "rgb(1,2,3)"],
+    "tone":    { "info": "#5566CC", "warn": "#B4801E", "good": "#2F6F5B" }
+  },
+  "type": {
+    "family":   "Inter, system-ui, sans-serif",
+    "familyMono": "ui-monospace, monospace",
+    "scale": {
+      "title":     40,
+      "cardTitle": 28,
+      "body":      15,
+      "caption":   12
+    },
+    "lineHeight": 1.35
+  },
+  "space": {
+    "cardPad":  42,
+    "blockGap": 18,
+    "radius":    9
+  }
+}

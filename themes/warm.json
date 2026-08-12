@@ -6,7 +6,7 @@
     "text":    "#33291F",
     "muted":   "#6B5847",
     "accent":  "#A8410E",
-    "series":  ["#A8410E", "#2F6F5B", "#3D5A99", "#8A5A2B", "#7A3F6B"],
+    "series":  ["#A8410E", "#2F6F5B", "#3D5A99", "#6B4A00", "#7A3F6B"],
     "tone":    { "info": "#3D5A99", "warn": "#A8410E", "good": "#2F6F5B" }
   },
   "type": {

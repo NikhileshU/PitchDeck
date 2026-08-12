@@ -1,0 +1,35 @@
+{
+  "schema": "1.0",
+  "meta": { "title": "Platform Review", "archetype": "product-demo",
+            "theme": "slate", "aspect": "16:9",
+            "_note": "Asserts the WARN path of the R5-A1 hybrid: 4+-token noun-phrase titles (no verb, no figure) draw exactly 3 title-is-claim warns, zero errors, exit 0. Titles are 4+-token variants of the register's examples because 3-token titles trip the narrow error rule." },
+  "cards": [
+    { "id": "c1", "layout": "title", "title": "Platform Review",
+      "subtitle": "Product · August 2026", "role": null, "blocks": [], "notes": null },
+    { "id": "c2", "layout": "content", "title": "Competitive Landscape and Market Review",
+      "role": null,
+      "blocks": [
+        { "id": "c2b1", "type": "table", "source": "user",
+          "headers": ["Vendor", "Segment", "Motion"],
+          "rows": [ ["Northlane", "Enterprise", "Sales-led"],
+                    ["Brightkit", "SMB", "Product-led"] ] }
+      ],
+      "notes": "Landscape summary." },
+    { "id": "c3", "layout": "content", "title": "Unit Economics Deep Dive",
+      "role": null,
+      "blocks": [
+        { "id": "c3b1", "type": "kpi", "value": "$4,100", "label": "blended CAC, Q3",
+          "delta": "−22% vs Q2", "source": "user" }
+      ],
+      "notes": "Economics detail." },
+    { "id": "c4", "layout": "content", "title": "Roadmap Sequencing and Scope Options",
+      "role": null,
+      "blocks": [
+        { "id": "c4b1", "type": "bullets", "items": [
+            "Ship the reporting module before the API",
+            "Hold multi-region until two design partners commit",
+            "Bundle SSO with the enterprise tier" ] }
+      ],
+      "notes": "Sequencing options." }
+  ]
+}

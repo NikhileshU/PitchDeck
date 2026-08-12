@@ -3,7 +3,11 @@
 
 Deterministic, no LLM. Prints the inline summary (spec §13 shape) to stdout and
 writes report.md with the six sections in fixed order — unverified inputs first,
-always. Reporting is not a gate: exit 1 only when an input cannot be read.
+always. judge.json is LLM output and is validated against the §11 contract: the
+five dimensions must each carry a numeric score in 1–5; violations surface as
+`judge-contract` findings in section 2 and fail gate 3. Unknown dimensions are
+dropped from the mean and listed separately. Reporting is not a gate: exit 1
+only when an input cannot be read.
 """
 
 import argparse
@@ -12,6 +16,7 @@ import sys
 from pathlib import Path
 
 DIMENSIONS = ("storyline", "verticalLogic", "archetypeFit", "audienceFit", "density")
+CONCERN_CAP = 5
 PLURAL = {"chart": "charts", "table": "tables", "kpi": "KPIs"}
 
 
@@ -31,14 +36,57 @@ def _sev(findings, *sevs):
     return [f for f in findings if f.get("severity") in sevs]
 
 
-def _scores(judge):
+def _mdcell(s):
+    return str(s).replace("|", "\\|").replace("\n", " ")
+
+
+def _judge_contract(judge):
+    """§11 contract violations — each fails gate 3 and lands in section 2."""
+    violations = []
     sc = judge.get("scores") or {}
-    out = [(d, sc[d].get("score"), sc[d].get("note", "")) for d in DIMENSIONS
-           if isinstance(sc.get(d), dict) and isinstance(sc[d].get("score"), (int, float))]
-    out += [(d, v.get("score"), v.get("note", "")) for d, v in sc.items()
-            if d not in DIMENSIONS and isinstance(v, dict)
-            and isinstance(v.get("score"), (int, float))]
-    return out
+    for d in DIMENSIONS:
+        e = sc.get(d)
+        s = e.get("score") if isinstance(e, dict) else None
+        if isinstance(s, bool) or not isinstance(s, (int, float)):
+            violations.append(f"dimension {d!r} is missing or unscored")
+        elif not 1 <= s <= 5:
+            violations.append(f"dimension {d!r} score {s!r} is outside the 1–5 scale")
+    if len(judge.get("concerns") or []) > CONCERN_CAP:
+        violations.append(f"{len(judge['concerns'])} concerns exceed the contract cap "
+                          f"of {CONCERN_CAP}")
+    return violations
+
+
+def _scores(judge):
+    """(valid-known-dimension rows, unknown-dimension rows) — unknown never gates."""
+    sc = judge.get("scores") or {}
+    valid, unknown = [], []
+    for d, v in sc.items():
+        s = v.get("score") if isinstance(v, dict) else None
+        row = (d, s, v.get("note", "") if isinstance(v, dict) else "")
+        if d in DIMENSIONS:
+            if isinstance(s, (int, float)) and not isinstance(s, bool) and 1 <= s <= 5:
+                valid.append(row)
+        else:
+            unknown.append(row)
+    valid.sort(key=lambda r: DIMENSIONS.index(r[0]))
+    return valid, unknown
+
+
+def _block_types(ir):
+    types = {}
+
+    def walk(blocks):
+        for b in blocks or []:
+            if isinstance(b, dict):
+                types[b.get("id")] = b.get("type")
+                if b.get("type") == "columns":
+                    for col in b.get("children") or []:
+                        walk(col)
+
+    for c in ir.get("cards") or []:
+        walk(c.get("blocks"))
+    return types
 
 
 def inline_summary(ir, fjson, judge):
@@ -57,23 +105,27 @@ def inline_summary(ir, fjson, judge):
         f"Gate 2  deterministic  {'✓' if not errs else '✗'}  "
         f"{len(errs)} errors · {len(warns)} warnings",
     ]
-    scores = _scores(judge)
-    if scores:
-        mean = sum(s for _, s, _ in scores) / len(scores)
-        low = min(scores, key=lambda x: x[1])
+    violations = _judge_contract(judge)
+    valid, _ = _scores(judge)
+    if violations:
+        lines.append("Gate 3  judged         ✗ invalid judge output — see report.md")
+    elif valid:
+        mean = sum(s for _, s, _ in valid) / len(valid)
+        low = min(valid, key=lambda x: x[1])
         lines.append(f"Gate 3  judged         {mean:.1f} / 5   (lowest: {low[0]} {low[1]:g})")
     else:
         lines.append("Gate 3  judged         — (no scores in judge.json)")
     extras = []
     if unv:
-        kinds = sorted({PLURAL.get(f.get("message", "").split(" ")[0], "values") for f in unv})
+        types = _block_types(ir)
+        kinds = sorted({PLURAL.get(types.get(f.get("block")), "values") for f in unv})
         cards = sorted({f["card"] for f in unv if f.get("card")})
+        where = f" on {', '.join(cards)}" if cards else ""
         extras.append(f"⚠  {len(unv)} unverified value{'s' if len(unv) != 1 else ''} — "
-                      f"{', '.join(kinds)} on {', '.join(cards)} use placeholder data")
-    concerns = (judge.get("concerns") or []) + _sev(findings, "concern")
-    if concerns:
-        extras.append(f"!  {len(concerns)} concern{'s' if len(concerns) != 1 else ''} "
-                      "raised — see report.md")
+                      f"{', '.join(kinds)}{where} use placeholder data")
+    n_conc = len(judge.get("concerns") or []) + len(_sev(findings, "concern"))
+    if n_conc:
+        extras.append(f"!  {n_conc} concern{'s' if n_conc != 1 else ''} raised — see report.md")
     return "\n".join(lines + ([""] + extras if extras else []))
 
 
@@ -88,7 +140,8 @@ def report_md(ir, fjson, judge):
     passes = fjson.get("passes", 0)
     errs, warns = _sev(findings, "error"), _sev(findings, "warn")
     unv, infos = _sev(findings, "unverified"), _sev(findings, "info")
-    scores = _scores(judge)
+    violations = _judge_contract(judge)
+    valid, unknown = _scores(judge)
     out = [f"# {meta.get('title', fjson.get('deck', 'Deck'))} — quality report", ""]
     out.append(f"{meta.get('archetype', '?')} · {meta.get('theme', '?')} · "
                f"{len(ir.get('cards') or [])} cards · {passes} revision "
@@ -105,10 +158,11 @@ def report_md(ir, fjson, judge):
     out.append("")
 
     out += ["## 2 · Errors", ""]
-    unresolved = [f for f in errs if not f.get("resolved")]
-    out += [_finding_line(f) for f in errs] or ["None."]
+    vlines = [f"- `judge` [judge-contract] — {v}" for v in violations]
+    unresolved = len([f for f in errs if not f.get("resolved")]) + len(vlines)
+    out += ([_finding_line(f) for f in errs] + vlines) or ["None."]
     if unresolved:
-        out += ["", f"**{len(unresolved)} unresolved — this deck must not ship.**"]
+        out += ["", f"**{unresolved} unresolved — this deck must not ship.**"]
     out.append("")
 
     out += ["## 3 · Warnings", ""]
@@ -123,21 +177,32 @@ def report_md(ir, fjson, judge):
     concerns += [{"card": f.get("card"), "message": f.get("message", "")}
                  for f in _sev(findings, "concern")]
     if concerns:
-        out += [f"- `{c['card'] or 'deck'}` — {c['message']}" for c in concerns]
+        shown = concerns[:CONCERN_CAP]
+        out += [f"- `{c['card'] or 'deck'}` — {c['message']}" for c in shown]
+        if len(concerns) > CONCERN_CAP:
+            out.append(f"- … showing {CONCERN_CAP} of {len(concerns)} "
+                       "(contract cap exceeded — see section 2)")
         out += ["", "Concerns are editorial judgment calls. They are never auto-fixed."]
     else:
         out.append("None raised.")
     out.append("")
 
     out += ["## 5 · Tier-2 scorecard", ""]
-    if scores:
+    if valid or unknown:
         out += ["| Dimension | Score | Note |", "|---|---|---|"]
-        out += [f"| {d} | {s:g} | {n} |" for d, s, n in scores]
-        mean = sum(s for _, s, _ in scores) / len(scores)
-        low = min(s for _, s, _ in scores)
-        verdict = "PASS" if mean >= 3.5 and low >= 3 else "FAIL"
-        out += ["", f"Mean **{mean:.1f} / 5**, lowest **{low:g}** — "
-                    f"gate (mean ≥ 3.5, no dimension < 3): **{verdict}**"]
+        out += [f"| {d} | {s:g} | {_mdcell(n)} |" for d, s, n in valid]
+        if violations:
+            out += ["", "**Gate 3 not computable — judge output violates the §11 "
+                        "contract (see section 2).**"]
+        else:
+            mean = sum(s for _, s, _ in valid) / len(valid)
+            low = min(s for _, s, _ in valid)
+            verdict = "PASS" if mean >= 3.5 and low >= 3 else "FAIL"
+            out += ["", f"Mean **{mean:.1f} / 5**, lowest **{low:g}** — "
+                        f"gate (mean ≥ 3.5, no dimension < 3): **{verdict}**"]
+        if unknown:
+            out += ["", "Ignored (not in the §11 contract): "
+                    + ", ".join(f"{d} ({s!r})" for d, s, _ in unknown)]
     else:
         out.append("No Tier-2 scores available.")
     out.append("")
@@ -148,10 +213,8 @@ def report_md(ir, fjson, judge):
         out.append("No revision passes were needed.")
     else:
         out.append(f"{passes} revision pass{'es' if passes != 1 else ''}.")
-        if resolved:
-            out += [""] + [_finding_line(f) for f in resolved]
-        else:
-            out += ["", "No findings recorded as resolved."]
+        out += ([""] + [_finding_line(f) for f in resolved]) if resolved \
+            else ["", "No findings recorded as resolved."]
     out.append("")
     return "\n".join(out)
 

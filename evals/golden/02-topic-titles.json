@@ -1,7 +1,8 @@
 {
   "schema": "1.0",
   "meta": { "title": "Q3 Business Review", "archetype": "business-stakeholder",
-            "theme": "slate", "aspect": "16:9" },
+            "theme": "slate", "aspect": "16:9",
+            "_note": "Asserts the NARROW title-is-claim error rule (≤3 alphabetic tokens, no strong figure, no verb token) — not the general heuristic, which now warns. Same findings and exit 1 as before the R5-A1 hybrid." },
   "cards": [
     { "id": "c1", "layout": "title", "title": "Q3 Business Review",
       "subtitle": "Commercial Ops · August 2026", "role": null, "blocks": [], "notes": null },

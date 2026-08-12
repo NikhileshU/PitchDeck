@@ -14,6 +14,7 @@ def _e(s): return html.escape(str(s), quote=True)
 
 def _fmt(v): return f"{v:g}" if isinstance(v, (int, float)) else str(v)
 
+# colours repeat past the theme's 5 — validate.py warns on >5 series upstream
 def _ser(j, ncolors): return f"var(--color-series-{j % ncolors + 1})"
 
 def _trunc(s, maxch): return s if len(s := str(s)) <= maxch else s[: max(1, maxch - 1)] + "…"
@@ -63,7 +64,7 @@ def _legend(series, fs, nc, W):
     for j, s in enumerate(series):
         name = _trunc(s["name"], 18)
         w_item = sw + fs * 0.45 + len(name) * fs * 0.62 + fs * 1.4
-        if x > 0 and x + w_item > W:  # wrap; cap at two rows
+        if x > 0 and x + w_item > W:  # two full rows, then a '+N more' marker row
             x, y = 0.0, y + fs * 1.4
             if y > fs * 1.5:
                 parts.append(f'<text x="0" y="{y + fs * 0.6:.1f}" '

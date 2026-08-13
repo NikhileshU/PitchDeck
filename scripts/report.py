@@ -11,13 +11,104 @@ only when an input cannot be read.
 """
 
 import argparse
+import datetime
 import json
+import re
 import sys
+import zipfile
 from pathlib import Path
 
 DIMENSIONS = ("storyline", "verticalLogic", "archetypeFit", "audienceFit", "density")
 CONCERN_CAP = 5
 PLURAL = {"chart": "charts", "table": "tables", "kpi": "KPIs"}
+
+
+# ---- xlsx ------------------------------------------------------------------
+# An .xlsx is a zip of XML, so this needs no third-party library — which matters:
+# requirements.txt ships two packages and both belong to the PPTX path only, and
+# a spreadsheet export is not a reason to put openpyxl on the HTML/report path.
+
+_ILLEGAL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
+def _xe(v):
+    s = _ILLEGAL.sub("", str(v))
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _colname(i):
+    s = ""
+    while i >= 0:
+        s, i = chr(ord("A") + i % 26) + s, i // 26 - 1
+    return s
+
+
+def _cell(ref, v):
+    if isinstance(v, bool) or v is None:
+        v = {True: "yes", False: "no", None: ""}[v]
+    if isinstance(v, (int, float)):
+        return f'<c r="{ref}"><v>{v:g}</v></c>'
+    return (f'<c r="{ref}" t="inlineStr"><is><t xml:space="preserve">'
+            f'{_xe(v)}</t></is></c>')
+
+
+def _sheet_xml(rows):
+    """Row 0 is the header: frozen and filterable, because these workbooks exist
+    to be sorted and sliced rather than read top to bottom."""
+    width = max((len(r) for r in rows), default=1)
+    body = []
+    for y, row in enumerate(rows, start=1):
+        cells = "".join(_cell(f"{_colname(x)}{y}", v) for x, v in enumerate(row))
+        body.append(f'<row r="{y}">{cells}</row>')
+    dim = f"A1:{_colname(width - 1)}{max(1, len(rows))}"
+    return ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            f'<dimension ref="{dim}"/>'
+            '<sheetViews><sheetView workbookViewId="0">'
+            '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>'
+            '</sheetView></sheetViews>'
+            f'<sheetData>{"".join(body)}</sheetData>'
+            f'<autoFilter ref="A1:{_colname(width - 1)}1"/></worksheet>')
+
+
+def write_xlsx(path, sheets):
+    """sheets: [(name, [[cell, ...], ...]), ...] — row 0 of each is the header."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    names = [_ILLEGAL.sub("", n)[:31] or f"Sheet{i}" for i, (n, _) in enumerate(sheets, 1)]
+    ct = "".join(f'<Override PartName="/xl/worksheets/sheet{i}.xml" ContentType='
+                 '"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+                 for i in range(1, len(sheets) + 1))
+    rels = "".join(f'<Relationship Id="rId{i}" Type="http://schemas.openxmlformats.org/'
+                   f'officeDocument/2006/relationships/worksheet" Target="worksheets/sheet{i}.xml"/>'
+                   for i in range(1, len(sheets) + 1))
+    tabs = "".join(f'<sheet name="{_xe(n)}" sheetId="{i}" r:id="rId{i}"/>'
+                   for i, n in enumerate(names, 1))
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("[Content_Types].xml",
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                   '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+                   '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+                   '<Default Extension="xml" ContentType="application/xml"/>'
+                   '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.'
+                   'openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' + ct + "</Types>")
+        z.writestr("_rels/.rels",
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                   '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                   '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/'
+                   '2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')
+        z.writestr("xl/workbook.xml",
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                   '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+                   'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                   f'<sheets>{tabs}</sheets></workbook>')
+        z.writestr("xl/_rels/workbook.xml.rels",
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                   '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/'
+                   f'relationships">{rels}</Relationships>')
+        for i, (_, rows) in enumerate(sheets, 1):
+            z.writestr(f"xl/worksheets/sheet{i}.xml", _sheet_xml(rows))
+    return path
 
 
 def _load(path, what):
@@ -219,12 +310,66 @@ def report_md(ir, fjson, judge):
     return "\n".join(out)
 
 
+def workbook(ir, fjson, judge):
+    """The same report as report.md, shaped for a spreadsheet: one row per thing
+    rather than prose, so runs can be compared and sliced. A live run has no
+    baseline to diff against — `expected` columns belong to the golden set, which
+    is where run_golden.py builds its own workbook."""
+    meta = ir.get("meta") or {}
+    findings = fjson.get("findings") or []
+    valid, unknown = _scores(judge)
+    violations = _judge_contract(judge)
+    errs = [f for f in _sev(findings, "error") if not f.get("resolved")]
+    mean = sum(s for _, s, _ in valid) / len(valid) if valid else None
+    low = min((s for _, s, _ in valid), default=None)
+
+    summary = [["field", "value"],
+               ["generated", datetime.datetime.now().isoformat(timespec="seconds")],
+               ["deck", meta.get("title", fjson.get("deck", ""))],
+               ["archetype", meta.get("archetype", "")],
+               ["theme", meta.get("theme", "")],
+               ["cards", len(ir.get("cards") or [])],
+               ["revision passes", fjson.get("passes", 0)]]
+    for sev in ("unverified", "error", "warn", "concern", "info"):
+        summary.append([f"findings: {sev}", len(_sev(findings, sev))])
+    summary += [["gate 1 schema", "pass" if not any(
+                    f.get("check") == "schema-valid" for f in _sev(findings, "error")) else "fail"],
+                ["gate 2 deterministic", "pass" if not errs else "fail"],
+                ["gate 3 mean", mean if mean is not None else ""],
+                ["gate 3 lowest", low if low is not None else ""],
+                ["gate 3 verdict", "not computable" if violations else
+                 ("" if mean is None else
+                  ("pass" if mean >= 3.5 and low >= 3 else "fail"))]]
+
+    frows = [["severity", "check", "card", "block", "resolved", "message"]]
+    for sev in ("unverified", "error", "warn", "concern", "info"):
+        for f in _sev(findings, sev):
+            frows.append([sev, f.get("check", ""), f.get("card") or "", f.get("block") or "",
+                          bool(f.get("resolved")), f.get("message", "")])
+
+    jrows = [["dimension", "score", "in contract", "note"]]
+    jrows += [[d, s, True, n] for d, s, n in valid]
+    jrows += [[d, s if isinstance(s, (int, float)) else str(s), False, n] for d, s, n in unknown]
+    if violations:  # no separator row when there is nothing to separate
+        jrows += [["", "", "", ""]] + [["contract violation", "", "", v] for v in violations]
+
+    crows = [["card", "source", "message"]]
+    crows += [[c.get("card") or "deck", "judge", c.get("message", "")]
+              for c in (judge.get("concerns") or [])]
+    crows += [[f.get("card") or "deck", "tier-1", f.get("message", "")]
+              for f in _sev(findings, "concern")]
+
+    return [("Summary", summary), ("Findings", frows), ("Judge", jrows), ("Concerns", crows)]
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--findings", required=True)
     ap.add_argument("--judge", required=True)
     ap.add_argument("--ir", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--xlsx", default=None,
+                    help="also write the report as a spreadsheet for analysis")
     args = ap.parse_args(argv)
 
     fjson = _load(args.findings, "findings")
@@ -233,7 +378,11 @@ def main(argv=None):
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(report_md(ir, fjson, judge), encoding="utf-8")
+    if args.xlsx:
+        write_xlsx(args.xlsx, workbook(ir, fjson, judge))
     print(inline_summary(ir, fjson, judge))
+    if args.xlsx:
+        print(f"\nspreadsheet: {args.xlsx}")
     return 0
 
 

@@ -239,6 +239,78 @@ class TestFileIngestion:
 
 
 # ---------------------------------------------------------------------------
+# spreadsheet export
+# ---------------------------------------------------------------------------
+
+def _sheets(path):
+    """Read an .xlsx with the stdlib. The writer has no dependencies on purpose,
+    so the test that checks it must not add one either — and parsing the parts by
+    hand is what proves the file is a real workbook rather than a zip we like the
+    look of."""
+    import xml.etree.ElementTree as ET
+    import zipfile
+    ns = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+    with zipfile.ZipFile(path) as z:
+        names = z.namelist()
+        for required in ("[Content_Types].xml", "_rels/.rels", "xl/workbook.xml",
+                         "xl/_rels/workbook.xml.rels"):
+            assert required in names, f"{path.name} is missing {required}"
+        wb = ET.fromstring(z.read("xl/workbook.xml"))
+        titles = [s.attrib["name"] for s in wb.iter(ns + "sheet")]
+        out = {}
+        for i, title in enumerate(titles, 1):
+            sheet = ET.fromstring(z.read(f"xl/worksheets/sheet{i}.xml"))
+            rows = []
+            for row in sheet.iter(ns + "row"):
+                rows.append(["".join(t.text or "" for t in c.iter(ns + "t"))
+                             or "".join(v.text or "" for v in c.iter(ns + "v"))
+                             for c in row.iter(ns + "c")])
+            out[title] = rows
+    return out
+
+
+class TestSpreadsheetExport:
+    """`--xlsx` is wired into both skills, so every live run produces one. A
+    workbook nobody parses is a workbook that quietly stops being written."""
+
+    def test_report_writes_a_readable_workbook(self, artifacts):
+        findings = artifacts / "findings.json"
+        run("validate.py", "--ir", DEMO / "deck.json",
+            "--theme", SLATE, "--out", findings)
+        xlsx = artifacts / "report.xlsx"
+        run("report.py", "--findings", findings, "--judge", DEMO / "judge.json",
+            "--ir", DEMO / "deck.json", "--out", artifacts / "report.md", "--xlsx", xlsx)
+
+        sheets = _sheets(xlsx)
+        assert list(sheets) == ["Summary", "Findings", "Judge", "Concerns"]
+        assert sheets["Judge"][0] == ["dimension", "score", "in contract", "note"]
+        # the five §11 dimensions, one row each, and no trailing filler
+        dims = [r[0] for r in sheets["Judge"][1:]]
+        assert dims == ["storyline", "verticalLogic", "archetypeFit",
+                        "audienceFit", "density"]
+        # demo/deck.json is all placeholder data: every one must reach the sheet
+        unverified = [r for r in sheets["Findings"][1:] if r[0] == "unverified"]
+        assert len(unverified) == 5, sheets["Findings"]
+
+    def test_golden_workbook_marks_expected_vs_actual(self, artifacts):
+        """The Findings sheet is the diff: a row present on one side only is the
+        regression, and it says so in the row rather than leaving you to align
+        two lists by eye."""
+        import run_golden
+        xlsx = artifacts / "golden-report.xlsx"
+        run_golden.R.write_xlsx(xlsx, run_golden.workbook(run_golden.fixtures()))
+
+        sheets = _sheets(xlsx)
+        assert list(sheets) == ["Fixtures", "Findings", "Judge"]
+        assert sheets["Fixtures"][0][:3] == ["fixture", "theme", "match"]
+        assert len(sheets["Fixtures"]) == 1 + 9, "one row per golden fixture"
+        # nothing should be one-sided while the suite is green
+        statuses = {r[1] for r in sheets["Findings"][1:]}
+        assert statuses == {"both"}, f"expected/actual drift: {statuses}"
+        assert all(r[2] == "yes" for r in sheets["Fixtures"][1:]), "a fixture does not match"
+
+
+# ---------------------------------------------------------------------------
 # C-04..C-09 — exit codes
 # ---------------------------------------------------------------------------
 

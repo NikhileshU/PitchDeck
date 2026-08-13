@@ -103,12 +103,16 @@ deliver HTML + PPTX and report that PDF export is unavailable in this runtime.
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/report.py" --findings findings.json \
-  --judge judge.json --ir deck.json --out out/report.md
+  --judge judge.json --ir deck.json --out out/report.md --xlsx out/report.xlsx
 ```
 
+`--xlsx` is not optional: every run leaves `out/report.xlsx` alongside the
+markdown — findings, judge scores and concerns one row each, so runs can be
+compared over time rather than read one at a time.
+
 Relay the inline summary it prints **verbatim** in your reply, then list the
-artifacts (`out/deck.html`, `out/deck.pdf`, `out/deck.pptx`, `out/report.md`).
-A run without a report did not happen.
+artifacts (`out/deck.html`, `out/deck.pdf`, `out/deck.pptx`, `out/report.md`,
+`out/report.xlsx`). A run without a report did not happen.
 
 ## Hard rules
 

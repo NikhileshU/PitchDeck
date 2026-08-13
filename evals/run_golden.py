@@ -95,6 +95,54 @@ def _lines(obj):
     return json.dumps(obj, indent=2, ensure_ascii=False).split("\n")
 
 
+def _key(f):
+    return (f.get("check"), f.get("severity"), f.get("card"), f.get("block"), f.get("message"))
+
+
+def workbook(fxs):
+    """Expected vs actual, one row per fixture and one per finding, plus the
+    judge scorecard — the diff in a form you can sort and pivot rather than read.
+    A finding present on one side only is the whole point, so `status` carries it
+    explicitly instead of leaving you to line two lists up by eye."""
+    fixtures = [["fixture", "theme", "match", "exit expected", "exit actual"]
+                + [f"{s} expected" for s in SEVERITIES]
+                + [f"{s} actual" for s in SEVERITIES]
+                + ["judge mean", "judge lowest", "gate 3"]]
+    findings = [["fixture", "status", "severity", "check", "card", "block", "resolved", "message"]]
+    judge_rows = [["fixture", "dimension", "score", "note"]]
+
+    for fx in fxs:
+        actual = run(fx)
+        exp_path = EXPECTED / fx.name
+        expected = _read(exp_path) if exp_path.exists() else {}
+        judge = _read(JUDGES / fx.name)
+        valid, _ = R._scores(judge)
+        mean = sum(s for _, s, _ in valid) / len(valid) if valid else ""
+        low = min((s for _, s, _ in valid), default="")
+        verdict = "" if not valid else ("pass" if mean >= 3.5 and low >= 3 else "fail")
+        ec, ac = expected.get("counts") or {}, actual["counts"]
+        fixtures.append(
+            [fx.name, actual["theme"], expected == actual,
+             expected.get("exit", ""), actual["exit"]]
+            + [ec.get(s, 0) for s in SEVERITIES] + [ac.get(s, 0) for s in SEVERITIES]
+            + [round(mean, 2) if valid else "", low, verdict])
+
+        exp_f = {_key(f): f for f in expected.get("findings") or []}
+        act_f = {_key(f): f for f in actual["findings"]}
+        for k in sorted(set(exp_f) | set(act_f), key=lambda k: tuple(str(x) for x in k)):
+            f = act_f.get(k) or exp_f[k]
+            status = ("both" if k in exp_f and k in act_f
+                      else "expected only — REGRESSION" if k in exp_f else "actual only — NEW")
+            findings.append([fx.name, status, f.get("severity", ""), f.get("check", ""),
+                             f.get("card") or "", f.get("block") or "",
+                             bool(f.get("resolved")), f.get("message", "")])
+
+        for d, s, n in valid:
+            judge_rows.append([fx.name, d, s, n])
+
+    return [("Fixtures", fixtures), ("Findings", findings), ("Judge", judge_rows)]
+
+
 def coverage(fxs):
     """Which fixture exercises which Tier-1 check. A check no fixture fires is a
     check that could be silently broken and still ship green (R10-M1/R11-H1)."""
@@ -123,6 +171,8 @@ def main(argv=None):
     ap.add_argument("--only", default=None, help="fixture number or name prefix")
     ap.add_argument("--coverage", action="store_true",
                     help="report which Tier-1 checks the set fires; exit 1 if any is unexercised")
+    ap.add_argument("--xlsx", default=None,
+                    help="write expected vs actual and the judge scores to a spreadsheet")
     args = ap.parse_args(argv)
 
     fxs = fixtures(args.only)
@@ -131,6 +181,9 @@ def main(argv=None):
         return 1
     if args.coverage:
         return coverage(fxs)
+    if args.xlsx:
+        R.write_xlsx(args.xlsx, workbook(fxs))
+        print(f"spreadsheet: {args.xlsx}")
     EXPECTED.mkdir(parents=True, exist_ok=True)
 
     failed = []

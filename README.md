@@ -40,7 +40,7 @@ The `build-deck` skill establishes the archetype, writes the IR, runs the gates,
 renders, and reports. Ask for a review instead and `review-deck` scores a
 `deck.json` you already have without changing a line of it.
 
-You get four files:
+You get five files:
 
 | File | What it is |
 |---|---|
@@ -48,6 +48,7 @@ You get four files:
 | `out/deck.pdf` | 13.333 × 7.5 in, text selectable |
 | `out/deck.html` | Self-contained; charts are server-generated inline SVG, no JavaScript |
 | `out/report.md` | Unverified inputs first, then errors, warnings, concerns, scores |
+| `out/report.xlsx` | The same report as data — one row per finding, dimension and concern |
 
 ---
 
@@ -58,7 +59,7 @@ prompt → deck.json → gate 1+2 (validate.py) → gate 3 (Claude judges)
                             ↓ pass
               render_html.py  render_pptx.py     ← peers; neither reads the other
                      ↓              ↓
-                export_pdf.py    report.md
+                export_pdf.py    report.md + report.xlsx
 ```
 
 **The IR is the only source of truth.** A bad deck is fixed by regenerating
@@ -121,7 +122,7 @@ validate.py     --ir deck.json [--theme themes/slate.json] --out findings.json [
 render_html.py  --ir deck.json --theme themes/slate.json --out out/deck.html
 render_pptx.py  --ir deck.json --theme themes/slate.json --out out/deck.pptx
 export_pdf.py   --html out/deck.html --out out/deck.pdf [--cards N]
-report.py       --findings findings.json --judge judge.json --ir deck.json --out out/report.md
+report.py       --findings findings.json --judge judge.json --ir deck.json --out out/report.md [--xlsx out/report.xlsx]
 ```
 
 `validate.py` exits 1 on any `error` finding. Pass `--theme` or the contrast,
@@ -136,7 +137,15 @@ are development material and are not part of an installed plugin.
 python3 evals/run_golden.py             # 9 fixtures, full report output asserted
 python3 evals/run_golden.py --coverage  # all 14 Tier-1 checks must fire somewhere
 python3 evals/run_golden.py --update    # rebaseline — read the diff before committing
+python3 evals/run_golden.py --xlsx evals/out/golden-report.xlsx   # expected vs actual, as data
 ```
+
+Every `pytest` run writes `evals/out/golden-report.xlsx` on the way out: a
+Fixtures sheet (expected vs actual counts per fixture), a Findings sheet where
+each row is marked `both`, `expected only — REGRESSION` or `actual only — NEW`,
+and a Judge sheet of every dimension score. Test artifacts stay under
+`evals/out/<test-name>/`, wiped at the start of each session and pruned of
+directories nothing wrote to, so what remains is exactly what the run produced.
 
 The golden set asserts the *whole* report per fixture — every finding in order, the
 inline summary, and every line of `report.md` — so a wording change or a moved

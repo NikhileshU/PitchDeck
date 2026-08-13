@@ -19,6 +19,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "evals"))  # run_golden, for the session workbook
 
 GOLDEN = ROOT / "evals" / "golden"
 FIXTURES = ROOT / "evals" / "fixtures"
@@ -74,11 +75,30 @@ def theme_path(name):
 def _clean_out():
     """Wipe once per session, not per test. Per-test cleanup would lose every
     artifact the moment the run ends, which defeats the point; leaving stale
-    files from a previous run is worse than having none."""
+    files from a previous run is worse than having none.
+
+    On the way out, prune directories no test actually wrote to: `artifacts` is
+    requested by more tests than write files, and an empty directory in here is
+    indistinguishable from a stage that produced nothing."""
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True, exist_ok=True)
     yield
+    for d in sorted((p for p in OUT.rglob("*") if p.is_dir()), reverse=True):
+        if not any(d.iterdir()):
+            d.rmdir()
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Every test run leaves the expected-vs-actual and judge-score workbook in
+    evals/out/, whatever subset of tests ran — the golden comparison is over the
+    fixtures, not over the selected tests, so it is always the full picture."""
+    import run_golden
+    try:
+        run_golden.R.write_xlsx(OUT / "golden-report.xlsx",
+                                run_golden.workbook(run_golden.fixtures()))
+    except Exception as e:  # a reporting failure must never mask a test result
+        print(f"\nconftest: golden workbook not written: {type(e).__name__}: {e}")
 
 
 @pytest.fixture

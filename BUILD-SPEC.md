@@ -69,7 +69,11 @@ deck-builder/
 │   ├── validate.py
 │   └── report.py
 ├── evals/
+│   ├── run_all.py                      every check, one command — not shipped
 │   ├── run_golden.py                   test harness — not a shipped script
+│   ├── check_catalogue.py              catalogue vs suite reconciler
+│   ├── pitchdeck-test-catalogue.md     every case the codebase supports
+│   ├── conftest.py, test_*.py          the pytest suite
 │   └── golden/
 │       ├── 01-good-business.json
 │       ├── 02-topic-titles.json        (bad: titles are noun phrases)

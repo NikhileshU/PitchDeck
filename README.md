@@ -134,11 +134,20 @@ From a clone of the repository — `evals/`, `demo/`, `BUILD-SPEC.md` and `CLAUD
 are development material and are not part of an installed plugin.
 
 ```bash
+python3 evals/run_all.py                # everything below, one summary, exit 1 on any failure
+
 python3 evals/run_golden.py             # 9 fixtures, full report output asserted
 python3 evals/run_golden.py --coverage  # all 14 Tier-1 checks must fire somewhere
 python3 evals/run_golden.py --update    # rebaseline — read the diff before committing
 python3 evals/run_golden.py --xlsx evals/out/golden-report.xlsx   # expected vs actual, as data
+python3 evals/check_catalogue.py        # does the test catalogue match the suite?
+python3 evals/check_catalogue.py --todo # the remaining work list
 ```
+
+`evals/pitchdeck-test-catalogue.md` is the catalogue of every case the codebase
+supports. `check_catalogue.py` keeps its status column honest: it links a case to
+a test by the id in the test's docstring, and fails on a `+` that is already
+written, a ✓ nothing carries, or an id no table defines.
 
 Every `pytest` run writes `evals/out/golden-report.xlsx` on the way out: a
 Fixtures sheet (expected vs actual counts per fixture), a Findings sheet where

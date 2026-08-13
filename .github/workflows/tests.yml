@@ -28,7 +28,9 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Test
-        run: python -m pytest -q
+        # no -q: pytest.ini already sets it, and a second one is -qq, which
+        # suppresses the summary line the log exists to show
+        run: python -m pytest
 
       # The golden set also runs under pytest, but keeping it as its own step
       # means a golden diff is legible in the job list without opening logs.
@@ -37,6 +39,15 @@ jobs:
 
       - name: Tier-1 check coverage
         run: python evals/run_golden.py --coverage
+
+      - name: Catalogue matches the suite
+        run: python evals/check_catalogue.py
+
+      - uses: actions/upload-artifact@v4
+        if: always()          # most useful precisely when the step before failed
+        with:
+          name: test-artifacts-py${{ matrix.python-version }}
+          path: evals/out/
 
   package:
     runs-on: ubuntu-latest

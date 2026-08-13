@@ -29,6 +29,7 @@ not a precondition for using this.
 """
 
 import argparse
+import ast
 import re
 import sys
 from pathlib import Path
@@ -42,7 +43,7 @@ CATALOGUE = ROOT / "evals" / "pitchdeck-test-catalogue.md"
 SUITE = sorted((ROOT / "evals").glob("test_*.py"))
 
 ID = re.compile(r"^(?:[A-Z]{1,2}|○)-\d+$")
-DONE, TODO, SCOPE = "done", "todo", "scope"
+DONE, TODO, SCOPE, PARTIAL = "done", "todo", "scope", "partial"
 
 
 def parse_catalogue(path):
@@ -63,37 +64,74 @@ def parse_catalogue(path):
         if not cells or not ID.match(cells[0]):
             continue
         cid, last = cells[0], cells[-1]
+        # `✓ (09) / +` means the positive case is written and the negative is
+        # not. Testing for ✓ first counted seven of those as fully done and
+        # dropped the other half out of --todo entirely (R14-M1), so a mixed
+        # cell gets its own status rather than being rounded up.
         if cid.startswith("○") or "○" in last:
             status = SCOPE
+        elif "✓" in last and "+" in last:
+            status = PARTIAL
         elif "✓" in last:
             status = DONE
-        elif last.startswith("+") or last == "+":
+        elif "+" in last:
             status = TODO
         else:
             unparsed.append((cid, last))
             continue
         cases[cid] = {"id": cid, "section": section, "sub": sub,
                       "case": cells[1] if len(cells) > 1 else "",
-                      "expect": cells[2] if len(cells) > 2 else "",
+                      # these tables vary in width: some carry one `Expect`
+                      # column, the per-check ones carry positive and negative
+                      "expect": " / ".join(cells[2:-1]),
                       "status": status, "note": last}
     return cases, unparsed
 
 
-def scan_suite(ids):
-    """Which test files mention each id. Searched literally against the ids the
-    catalogue defines, so a token like `R13-M3` can never be mistaken for one.
+def _pat(i):
+    """Range banners (`# C-10..C-13 — file ingestion`) are not links: they name a
+    span of the file, not a case. A `..` on either side disqualifies the match."""
+    return rf"(?<![\w-])(?<!\.\.){re.escape(i)}(?!\.\.)(?![\w-])"
 
-    Range banners (`# C-10..C-13 — file ingestion`) are not links: they name a
-    span of the file, not a case, and counting their endpoints reported two
-    cases as covered whose tests never mention them. A `..` on either side
-    disqualifies the match."""
+
+def _test_docstrings(path):
+    """(qualified name, docstring) for every test function in a module.
+
+    Only test functions count as links (R14-M2). Searching whole file bodies
+    meant a module docstring, a section banner, or a comment left behind by a
+    deleted test all registered as coverage — and the report could name the file
+    but not the test, which is the thing you actually need when a case is
+    supposedly covered and you want to read the assertion."""
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+    except SyntaxError:
+        return []
+    out = []
+
+    def visit(node, prefix=""):
+        for child in node.body:
+            if isinstance(child, ast.ClassDef):
+                visit(child, f"{prefix}{child.name}::")
+            elif isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) \
+                    and child.name.startswith("test"):
+                out.append((f"{path.name}::{prefix}{child.name}",
+                            ast.get_docstring(child) or ""))
+
+    visit(tree)
+    return out
+
+
+def scan_suite(ids):
+    """Which test asserts each case. Searched literally against the ids the
+    catalogue defines, so a token like `R13-M3` can never be mistaken for one."""
     hits = {i: [] for i in ids}
     for path in SUITE:
-        body = path.read_text(encoding="utf-8")
-        for i in ids:
-            pat = rf"(?<![\w-])(?<!\.\.){re.escape(i)}(?!\.\.)(?![\w-])"
-            if re.search(pat, body):
-                hits[i].append(path.name)
+        for name, doc in _test_docstrings(path):
+            if not doc:
+                continue
+            for i in ids:
+                if re.search(_pat(i), doc):
+                    hits[i].append(name)
     return hits
 
 
@@ -108,7 +146,7 @@ def _sections(cases):
     order, rows = [], {}
     for c in cases.values():
         if c["section"] not in rows:
-            rows[c["section"]] = {DONE: 0, TODO: 0, SCOPE: 0}
+            rows[c["section"]] = {DONE: 0, TODO: 0, SCOPE: 0, PARTIAL: 0}
             order.append(c["section"])
         rows[c["section"]][c["status"]] += 1
     return [(s, rows[s]) for s in order]
@@ -120,11 +158,11 @@ def _short(s, n):
 
 def report_text(cases, hits, unparsed):
     unbacked, undercounted, mislabelled = _drift(cases, hits)
-    print(f"{'section':34} {'total':>6} {'done':>6} {'todo':>6} {'scope':>6}")
+    print(f"{'section':34} {'total':>6} {'done':>6} {'part':>6} {'todo':>6} {'scope':>6}")
     for name, counts in _sections(cases):
         total = sum(counts.values())
         print(f"  {_short(name, 32):32} {total:>6} {counts[DONE]:>6} "
-              f"{counts[TODO]:>6} {counts[SCOPE]:>6}")
+              f"{counts[PARTIAL]:>6} {counts[TODO]:>6} {counts[SCOPE]:>6}")
 
     for label, items in (("UNBACKED (✓ in catalogue, no test carries the id)", unbacked),
                          ("UNDERCOUNTED (+ in catalogue, a test carries the id)", undercounted),
@@ -142,8 +180,9 @@ def report_text(cases, hits, unparsed):
             print(f"    {cid:8} {_short(cell, 50)!r}")
 
     done = sum(1 for c in cases.values() if c["status"] == DONE)
+    part = sum(1 for c in cases.values() if c["status"] == PARTIAL)
     linked = sum(1 for c in cases.values() if hits[c["id"]])
-    print(f"\n{len(cases)} cases · {done} marked done · {linked} linked to a test "
+    print(f"\n{len(cases)} cases · {done} marked done · {part} partial · {linked} linked to a test "
           f"· {len(unbacked)} unbacked · {len(undercounted)} undercounted "
           f"· {len(mislabelled)} mislabelled")
     return unbacked, undercounted, mislabelled
@@ -165,12 +204,12 @@ def workbook(cases, hits):
             drift.append([kind, c["id"], c["section"], c["case"],
                           ", ".join(hits[c["id"]])])
 
-    summary = [["section", "total", "done", "todo", "scope", "linked"]]
+    summary = [["section", "total", "done", "partial", "todo", "scope", "linked"]]
     for name, counts in _sections(cases):
         linked = sum(1 for c in cases.values()
                      if c["section"] == name and hits[c["id"]])
-        summary.append([name, sum(counts.values()), counts[DONE], counts[TODO],
-                        counts[SCOPE], linked])
+        summary.append([name, sum(counts.values()), counts[DONE], counts[PARTIAL],
+                        counts[TODO], counts[SCOPE], linked])
     return [("Cases", rows), ("Drift", drift), ("Summary", summary)]
 
 
@@ -194,10 +233,13 @@ def main(argv=None):
     hits = scan_suite(list(cases))
 
     if args.todo:
-        todo = [c for c in cases.values() if c["status"] == TODO]
+        todo = [c for c in cases.values() if c["status"] in (TODO, PARTIAL)]
         for c in todo:
-            print(f"{c['id']:8} {c['section'][:28]:30} {c['case']}")
-        print(f"\n{len(todo)} cases to write")
+            mark = "half" if c["status"] == PARTIAL else "    "
+            print(f"{c['id']:8} {mark} {c['section'][:28]:30} {c['case']}")
+        n_part = sum(1 for c in todo if c["status"] == PARTIAL)
+        print(f"\n{len(todo)} cases to write ({n_part} of them the missing half "
+              f"of a case whose positive side exists)")
         return 0
 
     unbacked, undercounted, mislabelled = report_text(cases, hits, unparsed)
@@ -205,9 +247,9 @@ def main(argv=None):
         R.write_xlsx(args.xlsx, workbook(cases, hits))
         print(f"→ {args.xlsx}")
 
-    unknown = sorted(set(re.findall(r"(?<![\w-])(?:[A-Z]{1,2})-\d{2}(?![\w-])",
-                                    "\n".join(p.read_text(encoding="utf-8") for p in SUITE)))
-                     - set(cases))
+    docs = "\n".join(doc for p in SUITE for _, doc in _test_docstrings(p) if doc)
+    unknown = sorted(set(re.findall(r"(?<![\w-])(?<!\.\.)((?:[A-Z]{1,2})-\d{1,3})(?!\.\.)(?![\w-])",
+                                    docs)) - set(cases))
     if unknown:
         print(f"\nUNKNOWN ids referenced by tests but absent from the catalogue: "
               f"{', '.join(unknown)}")

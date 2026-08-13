@@ -12,7 +12,13 @@ test carries, a `+` that is already written, an id no table defines. It exits 1
 on anything factually wrong with the catalogue, so a stale row fails the run
 rather than quietly misleading the next person.
 
-The link is **the case id in the test's docstring**:
+A status cell holding both marks — `✓ (09) / +` — is a **partial**: the positive
+case is written and the negative is not. Those seven rows count as work
+remaining, not as done, and `--todo` lists them marked `half`.
+
+The link is **the case id in the test's docstring**, and only a `def test_*`
+docstring counts — not a module docstring, a section banner, or a comment left
+behind by a deleted test:
 
 ```python
 def test_out_parent_directory_is_created(self, artifacts):
@@ -21,7 +27,9 @@ def test_out_parent_directory_is_created(self, artifacts):
 
 Nothing else is needed — no marker, no registry. A range banner
 (`# C-10..C-13 — file ingestion`) is deliberately *not* a link: it names a span
-of the file, not a case.
+of the file, not a case. The report names the test that carries each id
+(`test_pipeline.py::TestFileIngestion::test_unwritable_out_path`), so a case
+marked ✓ can be read rather than taken on trust.
 
 At the time of writing 3 of 115 ✓ cases carry their id, so `--strict` (which
 makes unbacked ✓ fatal) is the goal, not yet the gate. `--todo` prints the work

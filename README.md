@@ -172,6 +172,12 @@ claude plugin validate .claude-plugin/plugin.json --strict
 The archive carries the runtime only. `BUILD-SPEC.md`, `CLAUDE.md`, `evals/` and
 `demo/` are development material and stay in the repository.
 
+`demo/out/` is the one place generated artifacts are committed, and deliberately
+so: it is the phase-8 deliverable — the first real deck this tool produced, kept
+as a reference of what the output looked like when the pipeline was signed off.
+Everything else generated (`out/`, `evals/out/`, `dist/`) is gitignored. Do not
+"tidy" `demo/out/` into the ignore file.
+
 ## Known limits
 
 - **PDF export needs a local Chromium-family browser.** Verified against Brave and

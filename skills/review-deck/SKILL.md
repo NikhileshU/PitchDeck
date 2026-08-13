@@ -70,8 +70,12 @@ Score what is on the cards. A review that scores every dimension 4 is not a revi
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/report.py" --findings findings.json \
-  --judge judge.json --ir deck.json --out review.md
+  --judge judge.json --ir deck.json --out review.md --xlsx review.xlsx
 ```
+
+`--xlsx` writes the same review as a spreadsheet — one row per finding, per
+dimension and per concern. A review exists to be acted on and re-run; the
+workbook is what makes two reviews of the same deck comparable.
 
 Relay the inline summary it prints **verbatim**, then add what the report cannot
 compute: the fixes, ranked by what they cost and what they buy.

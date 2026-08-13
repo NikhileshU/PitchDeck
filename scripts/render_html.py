@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """render_html.py — render the deck.json IR to one self-contained HTML file.
 
-Pure renderer: render(ir, theme, out_path, css="") -> None. No globals/env/network.
-Inline-SVG charts, no JavaScript; CLI embeds images as data URIs. pt x 4/3 -> px.
+Pure renderer: render(ir, theme, out_path, css="", ir_dir=None) -> None. No globals,
+env or network — css text and ir_dir are passed in, never discovered. Inline-SVG
+charts, no JS; images embed as data URIs when ir_dir is given. pt x 4/3 -> px.
 """
 
-import argparse, base64, html, json, math, mimetypes, sys
+import argparse, base64, copy, html, json, math, mimetypes, sys
 from pathlib import Path
 
 def _px(pt): return round(pt * 4 / 3, 2)
@@ -291,6 +292,8 @@ def _b_image(b, theme):
     fit = b.get("fit", "contain")
     if fit not in ("cover", "contain"):
         raise ValueError(f"unknown image fit {fit!r}")
+    if not str(b["src"]).startswith("data:"):  # self-contained or not at all — pass ir_dir
+        raise ValueError(f"image src is not embedded: {b['src']!r} — call render() with ir_dir")
     return f'<img class="b-image b-image--{fit}" src="{_e(b["src"])}" alt="{_e(b["alt"])}">'
 
 def _b_columns(b, theme):
@@ -337,7 +340,41 @@ def _card(card, theme):
     return (f'<section class="card card--{_e(lay)}" id="{_e(card["id"])}">'
             + "".join(bits) + "</section>")
 
-def render(ir, theme, out_path, css=""):
+def _embed_images(blocks, base, cache):
+    # block-types.md: src resolves relative to deck.json, as it does for PPTX.
+    for b in blocks:
+        if b.get("type") == "image" and not str(b.get("src", "")).startswith("data:"):
+            p = Path(b["src"])
+            p = p if p.is_absolute() else base / p
+            key = str(p.resolve())
+            if key not in cache:
+                if not p.exists():
+                    raise FileNotFoundError(f"image not found for block {b.get('id')!r}: {p}")
+                data = p.read_bytes()
+                if len(data) > 2_000_000:
+                    print(f"render_html: warning: {p.name} is {len(data)/1e6:.1f}MB embedded", file=sys.stderr)
+                mime = mimetypes.guess_type(p.name)[0] or "application/octet-stream"
+                cache[key] = f"data:{mime};base64,{base64.b64encode(data).decode()}"
+            b["src"] = cache[key]
+        elif b.get("type") == "columns":
+            for col in b.get("children", []):
+                _embed_images(col, base, cache)
+
+def render(ir, theme, out_path, css=None, ir_dir=None):
+    """css text and ir_dir are passed in, never discovered (invariant 3); given ir_dir, render() embeds images itself.
+
+    css is the *text* of base.css. Omitting it raises: one card per page, and the
+    card box itself, are properties of that stylesheet, so an unstyled deck is not
+    a plainer deck — it is a broken one that paginates by content flow (R13-M2).
+    Pass css="" to render deliberately unstyled, which is what markup-level tests want.
+    """
+    if css is None:
+        raise ValueError("render_html needs the text of base.css in css= "
+                         "(pass css='' to render deliberately unstyled)")
+    if ir_dir is not None:
+        cache, ir = {}, copy.deepcopy(ir)  # embedding must not mutate the caller's IR
+        for card in ir["cards"]:
+            _embed_images(card.get("blocks") or [], Path(ir_dir).resolve(), cache)
     cards = "".join(_card(c, theme) for c in ir["cards"])
     page = f"@page {{ size: {_px(960)}px {_px(540)}px; margin: 0; }}"
     doc = ('<!doctype html><html><head><meta charset="utf-8">'
@@ -348,51 +385,28 @@ def render(ir, theme, out_path, css=""):
 
 # ---- CLI -------------------------------------------------------------------
 
-def _embed_images(blocks, base, cache):
-    # CLI-side, parse-local dict. Contract (block-types.md): src resolves relative
-    # to deck.json; PPTX CLI resolves identically — data URIs are HTML packaging.
-    for b in blocks:
-        if b.get("type") == "image" and not str(b.get("src", "")).startswith("data:"):
-            p = Path(b["src"])
-            if not p.is_absolute():
-                p = base / p
-            key = str(p.resolve())
-            if key not in cache:
-                if not p.exists():
-                    raise FileNotFoundError(f"image not found for block {b.get('id')!r}: {p}")
-                data = p.read_bytes()
-                if len(data) > 2_000_000:
-                    print(f"render_html: warning: {p.name} is {len(data)/1e6:.1f}MB embedded",
-                          file=sys.stderr)
-                mime = mimetypes.guess_type(p.name)[0] or "application/octet-stream"
-                cache[key] = f"data:{mime};base64,{base64.b64encode(data).decode()}"
-            b["src"] = cache[key]
-        elif b.get("type") == "columns":
-            for col in b.get("children", []):
-                _embed_images(col, base, cache)
-
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--ir", required=True)
-    ap.add_argument("--theme", required=True)
-    ap.add_argument("--out", required=True)
+    for a in ("--ir", "--theme", "--out"): ap.add_argument(a, required=True)
     args = ap.parse_args(argv)
 
-    ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
-    theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
-    css_path = Path(args.theme).with_name("base.css")
-    if not css_path.exists():
-        print(f"render_html: base.css not found next to theme: {css_path}", file=sys.stderr)
-        return 1
-
+    # One guard over the whole run — a CLI fails with a message, never a traceback
+    # (R13-L5, widened). OSError covers an unreadable --ir and an unwritable --out;
+    # ValueError covers malformed JSON and this module's own raises; KeyError and
+    # TypeError cover valid JSON that is not a deck, which reaches past the parse
+    # into the first field access.
     try:
-        cache = {}
-        for card in ir.get("cards", []):
-            _embed_images(card.get("blocks") or [], Path(args.ir).resolve().parent, cache)
+        ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
+        theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
+        css_path = Path(args.theme).with_name("base.css")
+        if not css_path.exists():
+            print(f"render_html: base.css not found next to theme: {css_path}", file=sys.stderr)
+            return 1
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-        render(ir, theme, args.out, css=css_path.read_text(encoding="utf-8"))
-    except (ValueError, FileNotFoundError) as e:
-        print(f"render_html: {e}", file=sys.stderr)
+        render(ir, theme, args.out, css=css_path.read_text(encoding="utf-8"),
+               ir_dir=Path(args.ir).resolve().parent)
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        print(f"render_html: {type(e).__name__}: {e}", file=sys.stderr)
         return 1
     return 0
 

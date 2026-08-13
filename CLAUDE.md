@@ -38,7 +38,7 @@ Violating any of these breaks the architecture.
 
 1. **`deck.json` (the IR) is the only source of truth.** Fix a bad deck by regenerating the IR and re-rendering. Never hand-edit generated HTML, PPTX XML, or CSS to correct deck content.
 2. **Renderers are peers, never chained.** `render_html` and `render_pptx` each read the IR independently. PPTX is never produced from HTML.
-3. **Renderers are pure:** `render(ir: dict, theme: dict, out_path: str) -> None` (the HTML renderer adds a `css: str = ""` kwarg — the CLI passes base.css *text* in; the pure core never discovers files). No globals, no env reads, no network. Paths passed in.
+3. **Renderers are pure:** `render(ir: dict, theme: dict, out_path: str) -> None`, plus two kwargs that are always *passed in, never discovered*: `css: str = ""` on the HTML renderer (base.css **text**, not a path) and `ir_dir=None` on both (the directory relative image srcs resolve against — R13-M1; omit it and every src must already be absolute, or a data URI for HTML). No globals, no env reads, no network. **Neither renderer mutates the IR it is given** — image resolution works on a copy, so rendering one format can never break its peer.
 4. **`base.css` is layout only.** Every colour, size, spacing value is `var(--*)`. Zero hex literals.
 5. **Themes are JSON.** `render_pptx.py` cannot parse CSS. Both renderers read `themes/*.json`.
 6. **No archetype logic in `scripts/`.** No `if archetype == ...` anywhere in a renderer. Archetype shapes the IR, prompt-side.
@@ -54,7 +54,7 @@ Violating any of these breaks the architecture.
 - Write OOXML by hand. If python-pptx can't do it, drop the feature — don't work around it in raw XML.
 - Add a config framework, a plugin system, or an abstraction layer for a second LLM provider.
 - Add block types or card layouts beyond the specified 10 and 4.
-- Let `render_html.py` or `render_pptx.py` exceed **400 lines**.
+- Let `render_html.py` or `render_pptx.py` exceed **400 code lines** each (blanks, comments and docstrings excluded — explanation is free, logic is not). Enforced by a test, not by eye.
 - Introduce a class hierarchy. Plain functions and dicts.
 - Use JavaScript in rendered HTML. Charts are server-generated inline SVG.
 - Auto-fix a `concern`. Concerns are surfaced for the human, never resolved by the agent.
@@ -116,7 +116,7 @@ evals/run_golden.py                    test harness, not a shipped script
 | 7 | `business-stakeholder.md`, `build-deck/SKILL.md` | Playbook complete |
 | 8 | **Generate one real deck** | **Human go/no-go. Stop and wait.** |
 | 9 | `render_pptx.py` | Same fixture as phase 3. Text selectable, charts and tables are native objects |
-| 10 | Golden set (6 fixtures + `expected/`) | Assert on full report output, not just pass/fail |
+| 10 | Golden set (9 fixtures + `expected/`) | Assert on full report output, not just pass/fail; `--coverage` → 14/14 checks fired |
 | 11 | 3 remaining playbooks, `warm.json`, `mono.json`, `review-deck/SKILL.md` | — |
 | 12 | `plugin.json`, `README.md`, `requirements.txt`, package `.plugin` | Installs in Claude Code and Cowork |
 

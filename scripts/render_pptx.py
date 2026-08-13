@@ -6,9 +6,9 @@ in IR order at the shared stacking model's pt positions (heights imported from
 validate._block_h, the single source). Clause 6: every text frame gets explicit
 no-autofit (MSO_AUTO_SIZE.NONE -> <a:noAutofit/>) and MSO_ANCHOR.TOP — PowerPoint
 must never shrink text to absorb overflow. Charts and tables are native objects.
-No raw OOXML. Image srcs are resolved to absolute paths by the CLI (block-types.md).
+No raw OOXML. Relative image srcs resolve against ir_dir when given (block-types.md).
 """
-import argparse, json, sys
+import argparse, copy, json, sys
 from pathlib import Path
 from PIL import Image
 from pptx import Presentation
@@ -300,10 +300,18 @@ def _card(prs, card, theme, st):
 
 # ---- entry -----------------------------------------------------------------
 
-def render(ir, theme, out_path):
+def render(ir, theme, out_path, ir_dir=None):
+    """ir_dir is the directory relative image srcs resolve against (block-types.md).
+    Pass it and render() resolves them itself; omit it and every src must already be
+    absolute. It is a parameter, never discovered — same fix as validate.py's ir_dir
+    (R4-H4), so a library caller runs the same path the CLI does."""
     prs = Presentation()
     prs.slide_width, prs.slide_height = Pt(960), Pt(540)
     st = _sty(theme)
+    if ir_dir is not None:
+        ir = copy.deepcopy(ir)  # resolution must not mutate the caller's IR
+        for card in ir["cards"]:
+            _resolve_images(card.get("blocks"), Path(ir_dir).resolve())
     for card in ir["cards"]:
         _card(prs, card, theme, st)
     prs.save(out_path)
@@ -325,15 +333,17 @@ def main(argv=None):
     ap.add_argument("--theme", required=True)
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
-    ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
-    theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
+    # One guard over the whole run — see render_html.main: a CLI fails with a
+    # message, never a traceback (R13-L5, widened). OSError covers an unreadable
+    # --ir and an unwritable --out; ValueError covers malformed JSON and this
+    # module's own raises; KeyError/TypeError cover valid JSON that is not a deck.
     try:
-        for card in ir.get("cards", []):
-            _resolve_images(card.get("blocks"), Path(args.ir).resolve().parent)
+        ir = json.loads(Path(args.ir).read_text(encoding="utf-8"))
+        theme = json.loads(Path(args.theme).read_text(encoding="utf-8"))
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-        render(ir, theme, args.out)
-    except (ValueError, FileNotFoundError) as e:
-        print(f"render_pptx: {e}", file=sys.stderr)
+        render(ir, theme, args.out, ir_dir=Path(args.ir).resolve().parent)
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        print(f"render_pptx: {type(e).__name__}: {e}", file=sys.stderr)
         return 1
     return 0
 
